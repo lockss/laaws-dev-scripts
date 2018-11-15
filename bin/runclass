@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# Run a java main in the context of a LOCKSS maven project.
+# Defaults to the classpath in target/test-classpath
+
+usage() {
+  echo "Usage: $0 <args> <java-args> <class-name> <class-args>"
+  echo "Runs <class-name> <class-args>"
+  echo "Must be run in a maven project base dir."
+  echo "  -q                  Quiet"
+  echo "  -classpath <path>   Appends <path> to classpath"
+  echo "  -testcp             Use target/test-classpath (default)"
+  echo "  -runcp              Use target/run-classpath"
+  echo "  -warn | -warning    Set default log level to WARNING"
+  echo "  -debug              Set default log level to DEBUG"
+  echo "  -debug2             Set default log level to DEBUG2"
+  echo "  -<n>  (e.g., -9)    run with Java version <n>.  Expects JAVA_<n>_HOME"
+  echo "                      env var to point to Java <n> install dir"
+  exit 1
+}
+
+[ "$#" == "0" ] && usage
+
+set_path() {
+  local jh="${1}"
+  if [ -z "$jh" ] ; then
+    return 1;
+  fi
+  JAVA_HOME="${jh}"
+  export JAVA_HOME
+  PATH="$JAVA_HOME/bin:$PATH"
+  export PATH
+  [ -z "$quiet" ] && echo JAVA_HOME="$JAVA_HOME"
+  return 0;
+}
+
+err_exit() {
+  echo "$1" >&2
+  exit 1
+}
+
+CLASSPATH=`cat target/test-classpath`
+export CLASSPATH
+
+args=""
+quiet=""
+
+while true ; do
+  case "$1" in
+    "-h" )
+      usage;;
+    "-q" )
+      quiet=1  
+      shift; continue;;
+    "-runcp" )
+      CLASSPATH=`cat target/run-classpath`
+      shift; continue;;
+    "-testcp" )
+      CLASSPATH=`cat target/test-classpath`
+      shift; continue;;
+    "-classpath" )
+      if [ -z "$CLASSPATH" ] ; then
+	CLASSPATH="$2"
+      else
+	CLASSPATH="$CLASSPATH":"$2"
+      fi
+      [ -z "$quiet" ] && echo "CLASSPATH=$CLASSPATH"
+      shift; shift; continue;;
+    "-warn" | "-warning" )
+      args="$args -Dorg.lockss.defaultLogLevel=WARNING"
+      shift; continue;;
+    "-debug" )
+      args="$args -Dorg.lockss.defaultLogLevel=DEBUG"
+      shift; continue;;
+    "-debug2" )
+      args="$args -Dorg.lockss.defaultLogLevel=DEBUG2"
+      shift; continue;;
+    "-7" )
+      set_path "${JAVA_17_HOME:=${JAVA_7_HOME}}" || err_exit "-7 option requires JAVA_7_HOME to point to Java 7 install dir"
+      shift; continue;;
+    "-8" )
+      set_path "${JAVA_18_HOME:=${JAVA_8_HOME}}" || err_exit "-8 option requires JAVA_8_HOME to point to Java 8 install dir"
+      shift; continue;;
+    "-9" )
+      set_path "${JAVA_19_HOME:=${JAVA_9_HOME}}" || err_exit "-9 option requires JAVA_9_HOME to point to Java 9 install dir"
+      shift; continue;;
+    "-10" )
+      set_path "${JAVA_110_HOME:=${JAVA_10_HOME}}" || err_exit "-10 option requires JAVA_10_HOME to point to Java 10 install dir"
+      shift; continue;;
+    "-11" )
+      set_path "${JAVA_111_HOME:=${JAVA_11_HOME}}" || err_exit "-11 option requires JAVA_11_HOME to point to Java 11 install dir"
+      shift; continue;;
+    -* )
+      args="$args $1"
+      shift; continue;;
+  esac
+  break;
+done
+
+class=$1
+shift
+[ -z "$class" ] && usage;
+
+[ -z "$quiet" ] && echo "cmd: java $args $class $@"
+java $args $class "$@"
