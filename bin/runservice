@@ -160,8 +160,8 @@ if [ -z $runjar ]; then
 else
   # Run the service from the fat jar
   # Ensure that the fat jar is up-to-date
-  if [ ! target/current.jar -ot target/build-info ]; then
-    java $java_args -jar target/current.jar $app_args || exit 1
+  if [ ! target/current-with-deps.jar -ot target/build-info ]; then
+    java $java_args -jar target/current-with-deps.jar $app_args || exit 1
     exit 0
   else
     echo "Not running service: Either packaged jar does not exist or is out of date."
