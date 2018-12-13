@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# fix paths in a patch file generated from lockss-daemon source tree (src/
+# and test/src/) so it can be applied to a maven project (src/main/java/
+# and src/test/java/)
+
+sed -i -e 's|\([ab]\)/src/org|\1/src/main/java/org|g' \
+       -e 's|\([ab]\)/test/src/org|\1/src/test/java/org|g' "$1"
