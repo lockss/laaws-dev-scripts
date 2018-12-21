@@ -15,7 +15,7 @@ usage() {
   echo "  -p <url>     Load config from prop server <url>"
   echo "  -p <name>    Load config from http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -c <url>     Load config from ConfigSvc at <url>"
-  echo "  -c <host>    Load config from ConfigSvc at <host>:54420"
+  echo "  -c <host>    Load config from ConfigSvc at <host>:24620"
   echo "  -c <host:port> Load config from ConfigSvc at <host>:<port>"
   echo "  -g <group>    Set polling group to <group>"
   echo "  -Dprop=val    Set System property"
@@ -126,7 +126,7 @@ if [ -n "$config" ]; then
 	*:* )
 	  cfg_host="$config" ;;
 	* )
-	  cfg_host="$config:54420" ;;
+	  cfg_host="$config:24620" ;;
       esac
       cfg_stem="http://$cfg_host" ;;
   esac
