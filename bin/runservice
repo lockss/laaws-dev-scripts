@@ -41,8 +41,9 @@ cleanup() {
   /bin/rm -f $tmp_jar
 }
 
-fat_jar="current-with-deps.jar"
-tmp_jar="runlib/$fat_jar"
+fat_jar_name="current-with-deps.jar"
+fat_jar="target/$fat_jar_name"
+tmp_jar="runlib/$fat_jar_name"
 
 # local files that should be served as part of the cluster config if running
 # as a cfgsvc
@@ -159,8 +160,9 @@ cluster_args=`preface_each "$cluster_files" -l`
 local_args=`preface_each "$local_files" -p`
 cluster_args=`trim "$cluster_args"`
 local_args=`trim "$local_args"`
+bootstrap_args="-b resource:application.properties"
 
-app_args="$cfg_svc $cluster_args $local_args $app_args"
+app_args="$cfg_svc $bootstrap_args $cluster_args $local_args $app_args"
 app_args=`trim "$app_args"`
 #echo app_args="$app_args"
 #echo java_args="$java_args"
@@ -176,10 +178,10 @@ if [ -z $runjar ]; then
 else
   # Run the service from the fat jar
   # Ensure that the fat jar is up-to-date
-  if [ ! target/$fat_jar -ot target/build-info ]; then
+  if [ ! $fat_jar -ot target/build-info ]; then
     mkdir -p runlib
-    cp target/$fat_jar runlib
-    java $java_args -jar runlib/$fat_jar $app_args || exit 1
+    cp $fat_jar runlib
+    java $java_args -jar $tmp_jar $app_args || exit 1
     exit 0
   else
     echo "Not running service: Either packaged jar does not exist or is out of date."
