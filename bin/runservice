@@ -1,12 +1,12 @@
 #!/bin/bash
 
 usage() {
-  echo "Run laaws service."
+  echo "Run LAAWS service."
   echo "By default, runs the service in the current project dir or the"
   echo "closest parent that contains a pom.xml.  The -dir argument may be"
   echo "used to specify an alternate project directory."
-  echo "By default, runs the service using maven.  With the -j arg, runs"
-  echo "the service directly in java using the fat jar."
+  echo "By default, runs the service using Maven.  With the -j arg, runs"
+  echo "the service directly in java using the fat JAR."
   echo "Usage: $0 [-options]"
   echo "Options:"
   echo "  -o           Invoke maven in offline mode"

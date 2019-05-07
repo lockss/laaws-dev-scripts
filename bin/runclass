@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Run a java main in the context of a LOCKSS maven project.
+# Run a Java main in the context of a LOCKSS Maven project.
 # Defaults to the classpath in target/test-classpath
 
 usage() {
   echo "Usage: $0 <args> <java-args> <class-name> <class-args>"
   echo "Runs <class-name> <class-args>"
-  echo "Must be run in a maven project base dir."
+  echo "Must be run in a Maven project base dir."
   echo "  -q                  Quiet"
   echo "  -classpath <path>   Appends <path> to classpath"
   echo "  -testcp             Use target/test-classpath (default)"
