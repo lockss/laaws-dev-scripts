@@ -1,0 +1,190 @@
+#!/bin/bash
+
+usage() {
+  echo "Run LAAWS service."
+  echo "By default, runs the service in the current project dir or the"
+  echo "closest parent that contains a pom.xml.  The -dir argument may be"
+  echo "used to specify an alternate project directory."
+  echo "By default, runs the service using Maven.  With the -j arg, runs"
+  echo "the service directly in java using the fat JAR."
+  echo "Usage: $0 [-options]"
+  echo "Options:"
+  echo "  -o           Invoke maven in offline mode"
+  echo "  -j           Run using fat jar instead of maven"
+  echo "  -dir <dir>   Run in <dir>"
+  echo "  -p <url>     Load config from prop server <url>"
+  echo "  -p <name>    Load config from http://props.lockss.org:8001/<name>/lockss.xml"
+  echo "  -c <url>     Load config from ConfigSvc at <url>"
+  echo "  -c <host>    Load config from ConfigSvc at <host>:24620"
+  echo "  -c <host:port> Load config from ConfigSvc at <host>:<port>"
+  echo "  -g <group>    Set polling group to <group>"
+  echo "  -Dprop=val    Set System property"
+}
+
+# replace string pattern replacement
+replace() {
+  echo "${1//$2/$3}"  
+}
+
+# preface_each space_separated_string prefix
+preface_each() {
+  echo `echo " " $1 | sed 's/  */ '"$2"' /g'`
+}
+
+# trim leading and trailing blanks
+trim() {
+  echo `echo $1 | sed -e 's/^ *//' -e 's/ *$//'`
+}
+
+# remove temp jar file when exit
+cleanup() {
+  /bin/rm -f $tmp_jar
+}
+
+fat_jar_name="current-with-deps.jar"
+fat_jar="target/$fat_jar_name"
+tmp_jar="runlib/$fat_jar_name"
+
+# local files that should be served as part of the cluster config if running
+# as a cfgsvc
+cluster_files="config/common.xml"
+# local files not part of cluster config
+local_files="config/lockss.txt config/lockss.opt"
+
+tdb_dirs=tdbxml/prod
+
+upass="lockss-u:lockss-p@"
+
+
+java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
+
+offline=
+app_args=
+
+run_dir=
+runjar=
+props=
+
+cfg_svc=
+
+# Clean up if script is interrupted or terminated.
+trap "cleanup" SIGINT SIGTERM 1 0
+
+while [ -n "$1" ]; do
+  case "$1" in
+    "-o" )
+      offline="-o"
+      shift; continue;;
+    "-j" )
+      runjar=1
+      shift; continue;;
+    "-dir" )
+      run_dir="$2"
+      shift; shift; continue;;
+    "-p" )
+      props="$2"
+      shift; shift; continue;;
+    "-c" )
+      config="$2"
+      shift; shift; continue;;
+    "-u" )
+      upass="$2"@
+      shift; shift; continue;;
+    -D* )
+      java_args="$java_args $1"
+      shift; continue;;
+    -g )
+      app_args="$app_args $1 $2"
+      shift; shift; continue;;
+    -h )
+      usage
+      exit 0;;
+    * )
+      echo "Unknown option: $1"
+      exit 1;;
+  esac
+  break;
+done
+
+if [ -z "$run_dir" ]; then
+  # go up until in dir with pom.xml
+  origdir="`pwd`"
+  while [ ! -f pom.xml ]; do
+    if [ "`pwd`" = "/" ]; then
+      echo "no pom.xml file found in $origdir or ancestors"
+      exit 1
+    fi
+    cd ..
+  done
+else
+  cd "$run_dir" || exit 1
+fi
+echo "running in `pwd`"
+
+if [ -n "$props" ]; then
+  case "$props" in
+    http:* | https:* )
+      prop_url="$props" ;;
+    * )
+      prop_url="http://props.lockss.org:8001/${props}/lockss.xml" ;;
+  esac
+fi
+
+if [ -n "${prop_url}" ]; then
+  cluster_files="${prop_url} $cluster_files"
+fi
+
+if [ -n "$config" ]; then
+  case "$config" in
+    http:* | https:* )
+      cfg_stem="$config" ;;
+    * )
+      case "$config" in
+	*:* )
+	  cfg_host="$config" ;;
+	* )
+	  cfg_host="$config:24620" ;;
+      esac
+      cfg_stem="http://$cfg_host" ;;
+  esac
+  # insert user:pass into cfgsvc url stem
+  cfg_svc="-c `echo $cfg_stem | sed 's|//|//'"$upass"'|'`"
+  # cluster files come from cfgsvc so don't put them on cmdline
+  cluster_files="$cfg_stem/config/file/cluster"
+fi
+
+#echo cfg_svc=$cfg_svc
+#echo cluster_files=$cluster_files
+
+cluster_args=`preface_each "$cluster_files" -l`
+local_args=`preface_each "$local_files" -p`
+cluster_args=`trim "$cluster_args"`
+local_args=`trim "$local_args"`
+bootstrap_args="-b resource:application.properties"
+
+app_args="$cfg_svc $bootstrap_args $cluster_args $local_args $app_args"
+app_args=`trim "$app_args"`
+#echo app_args="$app_args"
+#echo java_args="$java_args"
+
+
+if [ -z $runjar ]; then
+  # Run the service with maven
+  # Inexplicably, spring-boot requires run.arguments to be comma-separated,
+  # but run.jvmArguments must be space-separated
+  spring_run_args=`replace "$app_args" " " ","`
+  mvn $offline spring-boot:run -Drun.arguments="$spring_run_args" -Drun.jvmArguments="$java_args" || exit 1
+  exit 0
+else
+  # Run the service from the fat jar
+  # Ensure that the fat jar is up-to-date
+  if [ ! $fat_jar -ot target/build-info ]; then
+    mkdir -p runlib
+    cp $fat_jar runlib
+    java $java_args -jar $tmp_jar $app_args || exit 1
+    exit 0
+  else
+    echo "Not running service: Either packaged jar does not exist or is out of date."
+    exit 1
+  fi
+fi
