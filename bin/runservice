@@ -7,6 +7,7 @@ usage() {
   echo "used to specify an alternate project directory."
   echo "By default, runs the service using Maven.  With the -j arg, runs"
   echo "the service directly in java using the fat JAR."
+  echo "If a prop URL is supplied (-p), it replaces common.xml".
   echo "Usage: $0 [-options]"
   echo "Options:"
   echo "  -o           Invoke maven in offline mode"
@@ -131,7 +132,7 @@ if [ -n "$props" ]; then
 fi
 
 if [ -n "${prop_url}" ]; then
-  cluster_files="${prop_url} $cluster_files"
+  cluster_files="${prop_url}"
 fi
 
 if [ -n "$config" ]; then
