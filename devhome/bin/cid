@@ -1,0 +1,21 @@
+#!/bin/sh                                                                       
+
+# prints the container ID of the first container whose 'docker ps' line
+# contains <string>.  E.g.,  docker exec `cid repo` jcmd 1 Thread.print
+
+name="$1"
+
+# aliases for the lazy
+case "$1" in
+    "cfg" )
+        name=config
+        break;;
+    "mdx" )
+        name=metadata-extract
+        break;;
+    "mdq" )
+        name=metadata-service
+        break;;
+esac
+
+docker ps | awk "/([0-9a-fA-F]+).*$name/"' { print $1 ; exit 0 }'
