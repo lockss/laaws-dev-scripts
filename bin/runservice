@@ -10,16 +10,17 @@ usage() {
   echo "If a prop URL is supplied (-p), it replaces common.xml".
   echo "Usage: $0 [-options]"
   echo "Options:"
-  echo "  -o           Invoke maven in offline mode"
-  echo "  -j           Run using fat jar instead of maven"
-  echo "  -dir <dir>   Run in <dir>"
-  echo "  -p <url>     Load config from prop server <url>"
-  echo "  -p <name>    Load config from http://props.lockss.org:8001/<name>/lockss.xml"
+  echo "  -a <app_arg> Add <app_arg> to command line"
+  echo "  -Dprop=val   Set System property.
   echo "  -c <url>     Load config from ConfigSvc at <url>"
   echo "  -c <host>    Load config from ConfigSvc at <host>:24620"
   echo "  -c <host:port> Load config from ConfigSvc at <host>:<port>"
-  echo "  -g <group>    Set polling group to <group>"
-  echo "  -Dprop=val    Set System property"
+  echo "  -dir <dir>   Run in <dir>"
+  echo "  -g <group>   Set polling group to <group>.
+  echo "  -j           Run using fat jar instead of maven"
+  echo "  -o           Invoke maven in offline mode"
+  echo "  -p <name>    Load config from http://props.lockss.org:8001/<name>/lockss.xml"
+  echo "  -p <url>     Load config from prop server <url>"
 }
 
 # replace string pattern replacement
@@ -94,6 +95,9 @@ while [ -n "$1" ]; do
     -D* )
       java_args="$java_args $1"
       shift; continue;;
+    -a )
+      app_args="$app_args $2"
+      shift; shift; continue;;
     -g )
       app_args="$app_args $1 $2"
       shift; shift; continue;;
