@@ -135,7 +135,7 @@ if [ -n "$props" ]; then
 fi
 
 if [ -n "${prop_url}" ]; then
-  cluster_files="${prop_url}"
+  cluster_files="${prop_url} ${cluster_files} ./config/cluster.opt"
 fi
 
 if [ -n "$config" ]; then
