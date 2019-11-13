@@ -28,12 +28,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Generates file lists of Solr configuration set directories.
-
-# It is designed to be invoked from the LOCKSS configuration sets base directory,
-# e.g., src/main/resources/solr/configsets/lockss. It is invoked by Maven during
-# its generate-resources phase. See the project POM for additional details.
-
 # Nightly build script of the classic LOCKSS daemon
 
 #export JAVA_HOME='/usr/lib/jvm/java'
