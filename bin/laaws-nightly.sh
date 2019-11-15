@@ -30,7 +30,7 @@
 
 # -- Configuration -------------------------------------------------------------
 
-EMAIL=dlvargas@stanford.edu
+EMAIL=tortoise@lockss.org
 
 export JAVA_HOME='/usr/lib/jvm/java'
 export LANG='en_US'
