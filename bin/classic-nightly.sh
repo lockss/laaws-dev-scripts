@@ -33,7 +33,7 @@
 #export JAVA_HOME='/usr/lib/jvm/java'
 export JAVA_HOME='/usr/lib/jvm/jdk1.7.0_80/'
 export PATH="${JAVA_HOME}/bin:$PATH"
-export LANG='en_US'
+export LANG='en_US.UTF-8'
 
 TMPROOT=`mktemp -t -d lockss-nightly.XXXX`
 LOGFILE=${TMPROOT}/lockss-nightly.log
@@ -44,9 +44,19 @@ EMAIL=tortoise@lockss.org
 #EMAIL=dlvargas@stanford.edu
 #EMAIL=lockss-sysadmin@lockss.org
 
-# Check out and run test-all
-( cd ${TMPROOT}; git clone --depth=1 --branch master https://github.com/lockss/lockss-daemon.git )
-( cd ${TMPROOT}/lockss-daemon; env; ${ANT} -v test-all ) >> ${LOGFILE} 2>&1
+# Check out tree
+( cd ${TMPROOT}; git clone --depth=1 --branch master https://github.com/lockss/lockss-daemon.git ) > ${LOGFILE} 2>&1
+if [ $? -ne 0 ]; then
+    ( echo "`date`: LOCKSS daemon build failure on `hostname` in ${TMPROOT}"
+      echo "GIT clone failed:"
+      cat ${LOGFILE};
+      echo
+    ) | mailx -s "LOCKSS nightly build failure" ${EMAIL}
+    exit 1
+fi
+
+# Build and test-all
+( cd ${TMPROOT}/lockss-daemon; env; ${ANT} -v test-all ) > ${LOGFILE} 2>&1
 
 # Notify Tortoise of any failures
 if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
@@ -101,8 +111,17 @@ else
 
 		# Build RPM
 		RELEASE_NUM=`grep -P '^\d+\.\d+\.\d+$' ${TMPROOT}/lockss-daemon/src/defaultreleasename`
-		( cd ${TMPROOT}/lockss-daemon; ${ANT} clean rpm -Drpmrelease=1 -Dreleasename=${RELEASE_NUM} )
-		( mkdir -p ${RPMS}; cp ${TMPROOT}/lockss-daemon/rpms/RPMS/noarch/*.rpm ${RPMS} )
+		( cd ${TMPROOT}/lockss-daemon && ${ANT} clean rpm -Drpmrelease=1 -Dreleasename=${RELEASE_NUM} &&
+		  mkdir -p ${RPMS} && cp ${TMPROOT}/lockss-daemon/rpms/RPMS/noarch/*.rpm ${RPMS}
+		) >${LOGFILE} 2>&1
+		if [ $? -ne 0 ]; then
+		    ( echo "`date`: LOCKSS daemon build failure on `hostname` in ${TMPROOT}"
+		      echo "RPM build failed:"
+		      cat ${LOGFILE};
+		      echo
+		    ) | mailx -s "LOCKSS nightly build failure" ${EMAIL}
+		    exit 1
+		fi
 
 		# Clean up
 		( cd /tmp; rm -rf ${TMPROOT} )
