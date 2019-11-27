@@ -66,7 +66,7 @@ if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 		# YES: Ant reached the unit tests; determine which failed and attach its log to the email
 		( cd ${TMPROOT}/lockss-daemon/test/results;
 		  echo "`date`: LOCKSS daemon build failure on `hostname` in ${TMPROOT}:";
-		  for A in `grep -l FAIL *.txt`; do
+		  for A in `grep -L "Failures: 0" *.txt` `grep -L "Errors: 0" *.txt`; do
                     echo;
 		    echo "${A}:";
 #		    cat ${A};
