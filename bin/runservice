@@ -21,6 +21,7 @@ usage() {
   echo "  -o           Invoke maven in offline mode"
   echo "  -p <name>    Load config from http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -p <url>     Load config from prop server <url>"
+  echo "  -r <path>    Path to file with REST client credentials"
 }
 
 # replace string pattern replacement
@@ -101,6 +102,9 @@ while [ -n "$1" ]; do
     -g )
       app_args="$app_args $1 $2"
       shift; shift; continue;;
+    -r )
+      cred_file="-r $2"
+      shift; shift; continue;;
     -h )
       usage
       exit 0;;
@@ -170,7 +174,7 @@ cluster_args=`trim "$cluster_args"`
 local_args=`trim "$local_args"`
 bootstrap_args="-b resource:application.properties"
 
-app_args="$cfg_svc $bootstrap_args $cluster_args $local_args $app_args"
+app_args="$cfg_svc $bootstrap_args $cluster_args $local_args $cred_file $app_args"
 app_args=`trim "$app_args"`
 #echo app_args="$app_args"
 #echo java_args="$java_args"
