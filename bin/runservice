@@ -44,6 +44,35 @@ cleanup() {
   /bin/rm -f $tmp_jar
 }
 
+# derive component name from current.jar link
+component_name() {
+  local res=""
+  [ -e target/current.jar ] || return
+  which readlink >/dev/null || return
+  local jarpath=`readlink -f target/current.jar`
+  local jarname=`basename $jarpath`
+  case "$jarname" in
+    *repo* )
+      res="repo" ;;
+    *config* )
+      res="cfg" ;;
+    *poll* )
+      res="poller" ;;
+    *crawl* )
+      res="crawler" ;;
+    *metadata-service* )
+      res="mdq" ;;
+    *metadata-extract* )
+      res="mdx" ;;
+    * )
+      # default: remove leading laaws- or lockss-, trailing -service* or
+      # trailing -version*
+      [ -n "$jarname" ] || return
+      res=`echo "$jarname" | sed -e s/laaws-// -e s/lockss-// -e s/-service.*// -e s/-[0-9]\.[0-9].*//` ;;
+  esac
+  echo "$res"
+}
+
 fat_jar_name="current-with-deps.jar"
 fat_jar="target/$fat_jar_name"
 tmp_jar="runlib/$fat_jar_name"
@@ -168,13 +197,19 @@ fi
 #echo cfg_svc=$cfg_svc
 #echo cluster_files=$cluster_files
 
+name_arg=""
+component_name=`component_name`
+if [ -n "$component_name" ]; then
+  name_arg="--${component_name}--"
+fi
+
 cluster_args=`preface_each "$cluster_files" -l`
 local_args=`preface_each "$local_files" -p`
 cluster_args=`trim "$cluster_args"`
 local_args=`trim "$local_args"`
 bootstrap_args="-b resource:application.properties"
 
-app_args="$cfg_svc $bootstrap_args $cluster_args $local_args $cred_file $app_args"
+app_args="$name_arg $cfg_svc $bootstrap_args $cluster_args $local_args $cred_file $app_args"
 app_args=`trim "$app_args"`
 #echo app_args="$app_args"
 #echo java_args="$java_args"
@@ -192,7 +227,7 @@ else
   # Ensure that the fat jar is up-to-date
   if [ ! $fat_jar -ot target/build-info ]; then
     mkdir -p runlib
-    cp $fat_jar runlib
+    cp -u $fat_jar runlib
     java $java_args -jar $tmp_jar $app_args || exit 1
     exit 0
   else
