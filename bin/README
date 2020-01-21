@@ -1,0 +1,22 @@
+Useful scripts for LOCKSS 2.0 and LOCKSS plugin development
+
+runservice:
+
+  Runs a single LOCKSS service.  Invoke in the source tree of a LOCKSS
+  service, or use -d to specify such a dir.  The project must already have
+  been built with 'mvn package'.
+
+  To start Config Service, run
+
+    runservice -j -p <props-url>
+
+  from anywhere in the laaws-configservice source tree.  <props-url> is the
+  URL of the lockss.xml on your props server.
+
+  To start all other services, run
+
+    runservice -j -c localhost
+
+  from anywhere in that service's source tree.
+
+  Use ^C to exit a service.
