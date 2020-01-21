@@ -11,17 +11,20 @@ usage() {
   echo "Usage: $0 [-options]"
   echo "Options:"
   echo "  -a <app_arg> Add <app_arg> to command line"
-  echo "  -Dprop=val   Set System property.
+  echo "  -bg          Run in background"
+  echo "  -pid <file>  If background, write pid to this file"
+  echo "  -Dprop=val   Set System property"
   echo "  -c <url>     Load config from ConfigSvc at <url>"
   echo "  -c <host>    Load config from ConfigSvc at <host>:24620"
   echo "  -c <host:port> Load config from ConfigSvc at <host>:<port>"
   echo "  -dir <dir>   Run in <dir>"
-  echo "  -g <group>   Set polling group to <group>.
+  echo "  -g <group>   Set polling group to <group>"
   echo "  -j           Run using fat jar instead of maven"
   echo "  -o           Invoke maven in offline mode"
   echo "  -p <name>    Load config from http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -p <url>     Load config from prop server <url>"
   echo "  -r <path>    Path to file with REST client credentials"
+  echo "  -u <user>:<pass> REST client credentials"
 }
 
 # replace string pattern replacement
@@ -41,7 +44,9 @@ trim() {
 
 # remove temp jar file when exit
 cleanup() {
-  /bin/rm -f $tmp_jar
+:  # noop ensures non-empty body
+# disabled - breaks background mode
+#  /bin/rm -f $tmp_jar
 }
 
 # derive component name from current.jar link
@@ -91,11 +96,13 @@ upass="lockss-u:lockss-p@"
 java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
 
 offline=
-app_args=
+app_args="-Dspring.profiles.active=dev"
 
 run_dir=
 runjar=
 props=
+background=
+pid_file=
 
 cfg_svc=
 
@@ -133,6 +140,12 @@ while [ -n "$1" ]; do
       shift; shift; continue;;
     -r )
       cred_file="-r $2"
+      shift; shift; continue;;
+    -bg )
+      background=1
+      shift; continue;;
+    -pid )
+      pid_file="$1"
       shift; shift; continue;;
     -h )
       usage
@@ -228,10 +241,23 @@ else
   if [ ! $fat_jar -ot target/build-info ]; then
     mkdir -p runlib
     cp -u $fat_jar runlib
-    java $java_args -jar $tmp_jar $app_args || exit 1
+    if [ -n "$background" ]; then
+	echo "Starting $component_name in background" >&2
+	java $java_args -jar $tmp_jar $app_args 2>&1 &
+	pid=$!
+	if [ -n "$pid_file" ]; then
+	    echo $pid > $pid_file
+	fi
+	exit 0
+    else
+	echo "Starting $component_name in foreground" >&2
+	java $java_args -jar $tmp_jar $app_args || exit 1
+	echo "$component_name stopped with status $? at `date`" >&2
     exit 0
-  else
-    echo "Not running service: Either packaged jar does not exist or is out of date."
+    fi
+    echo "Not running service: Either packaged jar does not exist or is out of date." >&2
     exit 1
   fi
 fi
+
+
