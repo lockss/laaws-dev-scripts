@@ -187,7 +187,8 @@ echo "running in `pwd`"
 if [ -n "$props" ]; then
   case "$props" in
     lockss:* )
-      prop_url="http://props.lockss.org:8001/${props}/lockss.xml" ;;
+      pln_name=`echo "$props" | sed 's/^lockss://'`
+      prop_url="http://props.lockss.org:8001/${pln_name}/lockss.xml" ;;
     * )
       prop_url="$props" ;;
   esac
