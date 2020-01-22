@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- LOCKSS & LCAP tuning parameters -->
+<!-- Common config for all test frameworks -->
+<!-- This is included in the list of prop files by all the run_xxx_daemon -->
+<!-- scripts -->
+
+<lockss-config>
+
+  <!-- enclosing "org.lockss" so we don't have to repeat it -->
+  <property name="org.lockss">
+
+    <!-- Setup config-changed notifications -->
+    <property name="jms.broker.uri" value="tcp://localhost:61616"/>
+    <property name="jms.connect.failover" value="true"/>
+    <property name="config.enableJmsNotifications" value="true"/>
+
+    <!-- Enable AuEvent propagation -->
+    <property name="plugin.jms.enable" value="true"/>
+
+    <!-- Try to get a thread dump if a thread hangs -->
+    <property name="thread.hungThreadDump" value="true"/>
+
+    <!-- Default bindings of service to UI port in dev environment -->
+    <property name="app.serviceBindings">
+      <list>
+        <value>repo=:24610</value>     <!--repo has no UI port-->
+        <value>cfg=:24620:24621</value>
+        <value>poller=:24630:24631</value>
+        <value>crawler=:24630:24631</value>
+        <value>mdx=:24640:24641</value>
+        <value>mdq=:24650:24651</value>
+      </list>
+    </property>
+
+    <property name="daemon.pluginsCrawler" value="cfg"/>
+
+  </property>
+
+  <!-- End org.lockss -->
+</lockss-config>

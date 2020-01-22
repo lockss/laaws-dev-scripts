@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<lockss-config>
+  <property name="org.lockss">
+
+    <!--  PLN Configuration  -->
+    <property name="titleDbs">
+      <list>
+<!-- 	<value>titledb/titledb.xml</value> -->
+      </list>
+    </property>
+    <property name="plugin.registries">
+      <list>
+<!-- 	<value>http://props.lockss.org:8001/demo/plugins/</value> -->
+      </list>
+    </property>
+
+    <!-- Automatically load (list in the UI) plugins named .*Plugin in these
+	 jars -->
+    <property name="plugin.registryJars">
+      <list>
+      </list>
+    </property>
+
+    <property name="plugin.registry">
+      <list>
+	<value>ca.sfu.lib.plugin.cartoons.SFUCartoonsPlugin</value>
+      </list>
+    </property>
+
+    <property name="ui.access">
+      <property name="ip.include">
+	<list>
+<!-- 	  <value>171.66.236.0/24</value> -->
+	</list>
+      </property>
+    </property>
+    <property name="proxy">
+      <property name="ip.include">
+	<list>
+<!-- 	  <value>171.66.236.0/24</value> -->
+	</list>
+      </property>
+    </property>
+    <property name="id.initialV3PeerList">
+      <list>
+	<!--  sullockss-laaws-dev-01.stanford.edu  -->
+	<value>TCP:[171.66.236.42]:9729</value>
+	<!--  sullockss-laaws-dev-02.stanford.edu  -->
+	<value>TCP:[171.66.236.65]:9729</value>
+	<!--  sullockss-laaws-dev-03.stanford.edu  -->
+	<value>TCP:[171.66.236.66]:9729</value>
+	<!--  sullockss-laaws-dev-04.stanford.edu  -->
+	<value>TCP:[171.66.236.67]:9729</value>
+	<!--  bib87.ulb.ac.be  -->
+	<value>TCP:[164.15.1.87]:9729</value>
+      </list>
+    </property>
+    <property name="crawler.allowedPluginPermittedHosts" value=".*"/>
+    <!--  Seems appropriate for PLNs  -->
+    <property name="export.enabled" value="true"/>
+
+    <!-- No simultaneous crawls of AUs belonging to same plugin -->
+    <property name="baseau.defaultFetchRateLimiterSource" value="plugin"/>
+
+    <!-- Enables display of (a single) referrer info in crawl status -->
+    <property name="crawlStatus.recordReferrers" value="First"/>
+
+    <!--  Tuning  -->
+    <!--  Default 1 hour  -->
+    <property name="config.reloadInterval" value="30m"/>
+    <!--  Default 1 day  -->
+    <property name="plugin.registries.crawlInterval" value="12h"/>
+    <!--  Max number of simultaneous crawls.  Default 15  -->
+    <property name="crawler.threadPool.max" value="3"/>
+
+    <property name="log">
+      <property name="default.level" value="debug"/>
+      <property name="Scheduler.level" value="info"/>
+      <property name="CrawlerImpl.level" value="info"/>
+      <property name="BaseCrawler.level" value="info"/>
+    </property>
+
+    <!--  Debugging  -->
+    <property name="thread.hungThreadDump" value="true"/>
+
+    <!--  Distribute these to Config, Tuning, etc. sections?  -->
+    <property name="poll.v3">
+      <property name="quorum" value="3"/>
+      <!--  Make default?  -->
+      <property name="deleteExtraFiles" value="false"/>
+      <!--
+	  Required for a closed network (all peers listed in
+          initialV3PeerList 
+      -->
+      <property name="enableDiscovery" value="false"/>
+      <property name="minNominationSize" value="0"/>
+      <property name="maxNominationSize" value="0"/>
+    </property>
+    <property name="poll.wrongGroupRetryTime" value="5m"/>
+    <!--
+	I haven't made this the default because I'm still not sure
+        it's desirable 
+    -->
+    <property name="jms.connect.failover" value="true"/>
+
+  </property>
+</lockss-config>

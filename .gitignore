@@ -26,3 +26,7 @@ local.properties
 *~
 \#*
 .#*
+runcluster/data
+runcluster/logs
+runcluster/pids
+runcluster/config/repo.properties

@@ -20,3 +20,8 @@ runservice:
   from anywhere in that service's source tree.
 
   Use ^C to exit a service.
+
+  For a minimal LOCKSS cluster, run runservice in laaws-configservice,
+  laaws-repository-service and laaws-poller.  For metadata extraction and
+  retrieval capabilities, add laaws-metadataextractor and
+  laaws-metadataservice.

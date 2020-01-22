@@ -82,11 +82,15 @@ fat_jar_name="current-with-deps.jar"
 fat_jar="target/$fat_jar_name"
 tmp_jar="runlib/$fat_jar_name"
 
-# local files that should be served as part of the cluster config if running
-# as a cfgsvc
-cluster_files="config/common.xml"
-# local files not part of cluster config
-local_files="config/lockss.txt config/lockss.opt"
+if [ -z "${cluster_files}" ]; then
+    # local files that should be served as part of the cluster config if running
+    # as a cfgsvc
+    cluster_files="config/common.xml"
+fi
+if [ -z "${local_files}" ]; then
+    # local files not part of cluster config
+    local_files="config/lockss.txt config/lockss.opt"
+fi
 
 tdb_dirs=tdbxml/prod
 
@@ -96,11 +100,13 @@ upass="lockss-u:lockss-p@"
 java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
 
 offline=
-app_args="-Dspring.profiles.active=dev"
+#app_args="-Dspring.profiles.active=dev"
+app_args=
 
 run_dir=
 runjar=
 props=
+cluster_files=
 background=
 pid_file=
 
@@ -122,6 +128,9 @@ while [ -n "$1" ]; do
       shift; shift; continue;;
     "-p" )
       props="$2"
+      shift; shift; continue;;
+    "-cluster" )
+      cluster_files="${cluster_files} $2"
       shift; shift; continue;;
     "-c" )
       config="$2"
@@ -145,7 +154,7 @@ while [ -n "$1" ]; do
       background=1
       shift; continue;;
     -pid )
-      pid_file="$1"
+      pid_file="$2"
       shift; shift; continue;;
     -h )
       usage
@@ -177,10 +186,10 @@ echo "running in `pwd`"
 
 if [ -n "$props" ]; then
   case "$props" in
-    http:* | https:* )
-      prop_url="$props" ;;
-    * )
+    lockss:* )
       prop_url="http://props.lockss.org:8001/${props}/lockss.xml" ;;
+    * )
+      prop_url="$props" ;;
   esac
 fi
 
@@ -239,22 +248,29 @@ else
   # Run the service from the fat jar
   # Ensure that the fat jar is up-to-date
   if [ ! $fat_jar -ot target/build-info ]; then
-    mkdir -p runlib
-    cp -u $fat_jar runlib
-    if [ -n "$background" ]; then
-	echo "Starting $component_name in background" >&2
-	java $java_args -jar $tmp_jar $app_args 2>&1 &
-	pid=$!
-	if [ -n "$pid_file" ]; then
-	    echo $pid > $pid_file
-	fi
-	exit 0
-    else
+      mkdir -p runlib
+      cp -u $fat_jar runlib
+      if [ -n "$background" ]; then
+	  echo "Starting $component_name in background" >&2
+	  ( java $java_args -jar $tmp_jar $app_args 2>&1 &
+	    pid=$!
+	    if [ -n "$pid_file" ]; then
+		echo $pid > $pid_file
+	    fi
+	    wait $pid
+	    status=$?
+	    if [ -n "$pid_file" ]; then
+		rm -f $pid_file
+	    fi
+	    echo "$component_name stopped with status $status at `date`" >&2
+	    exit 0 ) &
+      else
 	echo "Starting $component_name in foreground" >&2
-	java $java_args -jar $tmp_jar $app_args || exit 1
+ 	java $java_args -jar $tmp_jar $app_args || exit 1
 	echo "$component_name stopped with status $? at `date`" >&2
-    exit 0
-    fi
+      fi
+
+  else
     echo "Not running service: Either packaged jar does not exist or is out of date." >&2
     exit 1
   fi

@@ -1,0 +1,125 @@
+#!/bin/bash
+
+#set -x
+
+logdir=logs
+piddir=pids
+
+# return absolute path of $1
+abspath() {                                               
+  ( cd "$(dirname "$1")"
+    printf "%s/%s\n" "$(pwd)" "$(basename "$1")" )
+}
+
+# start a service
+start_service() {
+  local svc_dir=$1
+  local svc_name=`basename "$svc_dir"`
+  touch "$piddir/${svc_name}.pid"
+  local pid_file=`abspath "$piddir/${svc_name}.pid"`
+  rm "$pid_file"
+  local log_file="$logdir/${svc_name}.log"
+  case "$svc_name" in
+    *config* )
+      local svc_args="-p $props" ;;
+    *repo* )
+      mkdir -p ./data/repo
+      local repo_data=`abspath ./data/repo`
+      touch config/repo.properties
+      local repo_config=`abspath config/repo.properties`
+      echo "repo.spec=local:${repo_data}" > $repo_config
+      echo "repo.persistIndexName=localindex.ser" >> $repo_config
+      local svc_args="-c localhost -a --spring.config.location=file:$repo_config";;
+    * )
+      local svc_args="-c localhost" ;;
+  esac
+
+  ( cd "$svc_dir" 
+    runservice -bg -pid "$pid_file" "-Dloader.path=${extra_jars}" -j $svc_args $java_args $other_args ) > $log_file # 2>&1
+}
+
+# stop a service
+stop_service() {
+  local svc_dir=$1
+  local svc_name=`basename "$svc_dir"`
+  local pid_file="$piddir/${svc_name}.pid"
+  if [ -f $pid_file ] ; then
+      kill `cat $pid_file` && rm -f $pid_file
+      echo "stopped $svc_name"
+  else
+    echo "$svc_name not running"
+  fi
+}
+
+verb="$1"
+shift
+
+case "$verb" in
+  start | stop ) ;;
+  * )
+    echo "first arg must be start or stop"
+    exit 1
+esac
+
+top_dir="../.."
+svcs_file="./config//services"
+extra_jars=lib
+java_args=
+other_args=
+
+while [ -n "$1" ]; do
+  case "$1" in
+    "-svcs" )
+      svcs_file="$2"
+      shift; shift; continue ;;
+    "-p" )
+      props="$2"
+      shift; shift; continue ;;
+    -jar )
+      extra_jars="${extra_jars},$2"
+      shift; shift; continue ;;
+    -D* )
+      java_args="$java_args $1"
+      shift; continue ;;
+    -h )
+      echo usage
+      usage
+      exit 0 ;;
+    -a | -g | -r | -cluster )
+      other_args="$other_args $1 $2"
+      shift; shift; continue ;;
+    -* )
+      echo "dddddd: $1"
+      other_args="$other_args $1"
+      shift; continue ;;
+    * )
+      echo "Unknown option0: $1"
+      exit 1 ;;
+  esac
+  break;
+done
+
+case "$verb" in
+  "clean" )
+    echo "clean not yet implemented"
+    exit 1 ;;
+  "start" )
+    if [ -z "$props" ]; then
+	echo "-p is required"
+	exit 1
+    fi
+    mkdir -p "$logdir" "$piddir" ;;
+esac
+
+services=`sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file"`
+
+for svc in $services ; do
+  case "$verb" in
+    "start" )
+      start_service "$svc"
+      continue ;;
+    "stop" )
+      stop_service "$svc"
+      continue ;;
+  esac
+done
