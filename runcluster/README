@@ -1,7 +1,14 @@
+This is a framework to run a set of LOCKSS services (a cluster) in a
+development environment.  It's a work in progress; details are likely to
+change.
 
+Each service to be run must be locally built from source.  To run a minimal
+cluster (config service, repository service, and poller/crawler service),
+git clone laaws-configservice, laaws-repository-service, and laaws-poller
+into sibling dirs of this project, mvn package each one, cd to this dir and
+run "./start".  Additional services can be added by editing config/services
+or by pointing to a different services file.  Run ./start -h for options.
 
-Rough edges
-
-- content (warcs) is in runcluster/data, but databases are in individual
-  project dirs
-  
+There are a number of rough edges.  E.g., the actual collected content is
+stored within the runcluster tree, but various databases and config files
+still reside in service project trees.

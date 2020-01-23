@@ -1,6 +1,19 @@
 #!/bin/bash
 
-#set -x
+usage() {
+  echo "Run a LAAWS cluster."
+  echo "Usage: $0 [start | stop] [-options]"
+  echo "Options:"
+  echo "  -svcs <file> Use alternate services file (default config/services)"
+  echo "  -p lockss:<name>  Load PLN config from http://props.lockss.org:8001/<name>/lockss.xml"
+  echo "  -p <url>     Load PLN config from prop server <url>"
+  echo "  -p <file>    Load PLN config from <file> (default config/lockss.xml)"
+  echo "  -cluster <file>  Load cluster config from <file (default config/cluster.xml)"
+  echo "  -g <group>   Set polling group to <group>"
+  echo "  -a <app_arg> Add <app_arg> to command line"
+  echo "  -Dprop=val   Set System property"
+  echo "  -jar <file>  Add <file> to the classpath"
+}
 
 logdir=logs
 piddir=pids
@@ -94,7 +107,6 @@ while [ -n "$1" ]; do
       java_args="$java_args $1"
       shift; continue ;;
     -h )
-      echo usage
       usage
       exit 0 ;;
     -a | -g | -r )
