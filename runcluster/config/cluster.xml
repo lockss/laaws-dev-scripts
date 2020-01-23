@@ -21,6 +21,9 @@
     <!-- Try to get a thread dump if a thread hangs -->
     <property name="thread.hungThreadDump" value="true"/>
 
+    <property name="repository.v2Repository"
+	      value="rest:lockss:http://localhost:24610"/>
+
     <!-- Default bindings of service to UI port in dev environment -->
     <property name="app.serviceBindings">
       <list>

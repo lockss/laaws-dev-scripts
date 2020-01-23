@@ -82,16 +82,6 @@ fat_jar_name="current-with-deps.jar"
 fat_jar="target/$fat_jar_name"
 tmp_jar="runlib/$fat_jar_name"
 
-if [ -z "${cluster_files}" ]; then
-    # local files that should be served as part of the cluster config if running
-    # as a cfgsvc
-    cluster_files="config/common.xml"
-fi
-if [ -z "${local_files}" ]; then
-    # local files not part of cluster config
-    local_files="config/lockss.txt config/lockss.opt"
-fi
-
 tdb_dirs=tdbxml/prod
 
 upass="lockss-u:lockss-p@"
@@ -169,6 +159,16 @@ while [ -n "$1" ]; do
   break;
 done
 
+if [ -z "${cluster_files}" ]; then
+    # local files that should be served as part of the cluster config if running
+    # as a cfgsvc
+    cluster_files="config/common.xml config/cluster.opt"
+fi
+if [ -z "${local_files}" ]; then
+    # local files not part of cluster config
+    local_files="config/lockss.txt config/lockss.opt"
+fi
+
 if [ -z "$run_dir" ]; then
   # go up until in dir with pom.xml
   origdir="`pwd`"
@@ -195,7 +195,7 @@ if [ -n "$props" ]; then
 fi
 
 if [ -n "${prop_url}" ]; then
-  cluster_files="${prop_url} ${cluster_files} ./config/cluster.opt"
+  cluster_files="${prop_url} ${cluster_files}"
 fi
 
 if [ -n "$config" ]; then
