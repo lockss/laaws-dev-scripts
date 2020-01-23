@@ -35,7 +35,7 @@ start_service() {
   esac
 
   ( cd "$svc_dir" 
-    runservice -bg -pid "$pid_file" "-Dloader.path=${extra_jars}" -j $svc_args $java_args $other_args ) > $log_file # 2>&1
+    ${runservice} -bg -pid "$pid_file" "-Dloader.path=${extra_jars}" -j $svc_args $java_args $other_args ) > $log_file # 2>&1
 }
 
 # stop a service
@@ -61,9 +61,13 @@ case "$verb" in
     exit 1
 esac
 
+runservice=`abspath "../bin/runservice"`
+
 top_dir="../.."
-svcs_file="./config//services"
+svcs_file="./config/services"
 extra_jars=lib
+props=config/lockss.txt
+absclust=`abspath "config/cluster.xml"`
 java_args=
 other_args=
 
@@ -74,9 +78,17 @@ while [ -n "$1" ]; do
       shift; shift; continue ;;
     "-p" )
       props="$2"
+      case "$props" in
+	http:* | https:* | lockss:* )
+	  : ;;
+	* )
+	  props=`abspath "$props"` ;;
+      esac
+
       shift; shift; continue ;;
     -jar )
-      extra_jars="${extra_jars},$2"
+      absjar=`abspath "$2"`
+      extra_jars="${extra_jars},$absjar"
       shift; shift; continue ;;
     -D* )
       java_args="$java_args $1"
@@ -85,19 +97,23 @@ while [ -n "$1" ]; do
       echo usage
       usage
       exit 0 ;;
-    -a | -g | -r | -cluster )
+    -a | -g | -r )
       other_args="$other_args $1 $2"
       shift; shift; continue ;;
+    -cluster )
+      absclust=`abspath "$2"`
+      shift; shift; continue ;;
     -* )
-      echo "dddddd: $1"
       other_args="$other_args $1"
       shift; continue ;;
     * )
-      echo "Unknown option0: $1"
+      echo "Unknown option: $1"
       exit 1 ;;
   esac
   break;
 done
+
+other_args="$other_args -cluster $absclust"
 
 case "$verb" in
   "clean" )
