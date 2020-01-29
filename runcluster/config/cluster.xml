@@ -10,6 +10,8 @@
   <!-- enclosing "org.lockss" so we don't have to repeat it -->
   <property name="org.lockss">
 
+    <property name="plugin.keystore.location" value="org/lockss/plugin/lockss-testing.keystore"/>
+
     <!-- Setup config-changed notifications -->
     <property name="jms.broker.uri" value="tcp://localhost:61616"/>
     <property name="jms.connect.failover" value="true"/>
