@@ -118,7 +118,7 @@ while [ -n "$1" ]; do
       java_args="$java_args $1"
       shift; continue ;;
     -force )
-      force=1
+      force="-9"
       shift; continue ;;
     -a | -g | -r )
       other_args="$other_args $1 $2"
