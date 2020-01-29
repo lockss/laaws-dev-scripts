@@ -11,8 +11,10 @@ usage() {
   echo "  -cluster <file>  Load cluster config from <file (default config/cluster.xml)"
   echo "  -g <group>   Set polling group to <group>"
   echo "  -a <app_arg> Add <app_arg> to command line"
+  echo "  -r <credentials_file> Load Rest client credentials from file"
   echo "  -Dprop=val   Set System property"
-  echo "  -jar <file>  Add <file> to the classpath"
+  echo "  -jar <file>  Add jar <file> to the classpath"
+  echo "  -force       Use with \"stop\" to force hung JVMs to exit"
 }
 
 logdir=logs
@@ -28,8 +30,13 @@ abspath() {
 start_service() {
   local svc_dir=$1
   local svc_name=`basename "$svc_dir"`
-  touch "$piddir/${svc_name}.pid"
-  local pid_file=`abspath "$piddir/${svc_name}.pid"`
+  local rel_pid_file="$piddir/${svc_name}.pid"
+  if [ -f "$rel_pid_file" ]; then
+      echo "$svc_name already running"
+      return 1
+  fi
+  touch "$rel_pid_file"
+  local pid_file=`abspath "$rel_pid_file"`
   rm "$pid_file"
   local log_file="$logdir/${svc_name}.log"
   case "$svc_name" in
@@ -57,7 +64,7 @@ stop_service() {
   local svc_name=`basename "$svc_dir"`
   local pid_file="$piddir/${svc_name}.pid"
   if [ -f $pid_file ] ; then
-      kill `cat $pid_file` && rm -f $pid_file
+      kill $force `cat $pid_file`
       echo "stopped $svc_name"
   else
     echo "$svc_name not running"
@@ -83,6 +90,7 @@ props=`abspath "config/lockss.xml"`
 absclust=`abspath "config/cluster.xml"`
 java_args=
 other_args=
+force=
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -99,6 +107,9 @@ while [ -n "$1" ]; do
       esac
 
       shift; shift; continue ;;
+    -cluster )
+      absclust=`abspath "$2"`
+      shift; shift; continue ;;
     -jar )
       absjar=`abspath "$2"`
       extra_jars="${extra_jars},$absjar"
@@ -106,15 +117,15 @@ while [ -n "$1" ]; do
     -D* )
       java_args="$java_args $1"
       shift; continue ;;
-    -h )
-      usage
-      exit 0 ;;
+    -force )
+      force=1
+      shift; continue ;;
     -a | -g | -r )
       other_args="$other_args $1 $2"
       shift; shift; continue ;;
-    -cluster )
-      absclust=`abspath "$2"`
-      shift; shift; continue ;;
+    -h )
+      usage
+      exit 0 ;;
     -* )
       other_args="$other_args $1"
       shift; continue ;;
