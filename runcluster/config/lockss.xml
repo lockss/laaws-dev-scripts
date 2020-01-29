@@ -19,12 +19,13 @@
 	 jars -->
     <property name="plugin.registryJars">
       <list>
+	<value>*ClockssEmisSourcePlugin.jar</value>
       </list>
     </property>
 
     <property name="plugin.registry">
       <list>
-	<value>ca.sfu.lib.plugin.cartoons.SFUCartoonsPlugin</value>
+<!-- 	<value>ca.sfu.lib.plugin.cartoons.SFUCartoonsPlugin</value> -->
       </list>
     </property>
 
