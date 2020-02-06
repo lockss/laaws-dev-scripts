@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Params that need to be set early, in platform config -->
+
+<lockss-config>
+  <property name="org.lockss.platform">
+
+    <property name="tmpDir" value="data/temp" />
+
+    <property name="v3.identity" value="TCP:[127.0.0.1]:9720" />
+
+    <if>
+      <test serviceAbbrev="cfg"/>
+      <then>
+	<property name="diskSpacePaths" value="./data/cfg-files"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="repo"/>
+      <then>
+	<property name="diskSpacePaths" value="./data/repo-files"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="poller"/>
+      <then>
+	<property name="diskSpacePaths" value="./data/poller-files"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="mdx"/>
+      <then>
+	<property name="diskSpacePaths" value="./data/mdx-files"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="mdq"/>
+      <then>
+	<property name="diskSpacePaths" value="./data/mdq-files"/>
+      </then>
+    </if>
+
+  </property>
+</lockss-config>

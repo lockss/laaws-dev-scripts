@@ -34,7 +34,11 @@ replace() {
 
 # preface_each space_separated_string prefix
 preface_each() {
-  echo `echo " " $1 | sed 's/  */ '"$2"' /g'`
+  local words=`trim "$1"`
+  if [ -z "$words" ]; then
+      return
+  fi
+  echo `echo " " $words | sed 's/  */ '"$2"' /g'`
 }
 
 # trim leading and trailing blanks
@@ -97,8 +101,11 @@ run_dir=
 runjar=
 props=
 cluster_files=
+local_files=
+nolocal=
 background=
 pid_file=
+nocd=
 
 cfg_svc=
 
@@ -122,6 +129,12 @@ while [ -n "$1" ]; do
     "-cluster" )
       cluster_files="${cluster_files} $2"
       shift; shift; continue;;
+    "-nolocal" )
+      nolocal=1
+      shift; continue;;
+    "-nocd" )
+      nocd=1
+      shift; continue;;
     "-c" )
       config="$2"
       shift; shift; continue;;
@@ -164,12 +177,12 @@ if [ -z "${cluster_files}" ]; then
     # as a cfgsvc
     cluster_files="config/common.xml config/cluster.opt"
 fi
-if [ -z "${local_files}" ]; then
+if [ -z "${local_files}" -a -z "{nolocal}" ]; then
     # local files not part of cluster config
     local_files="config/lockss.txt config/lockss.opt"
 fi
 
-if [ -z "$run_dir" ]; then
+if [ -z "$run_dir" -a -z "$nocd" ]; then
   # go up until in dir with pom.xml
   origdir="`pwd`"
   while [ ! -f pom.xml ]; do
@@ -179,10 +192,11 @@ if [ -z "$run_dir" ]; then
     fi
     cd ..
   done
-else
+  echo "running in `pwd`"
+elif [ -z "$nocd" ]; then
   cd "$run_dir" || exit 1
+  echo "running in `pwd`"
 fi
-echo "running in `pwd`"
 
 if [ -n "$props" ]; then
   case "$props" in

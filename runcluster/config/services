@@ -1,9 +1,10 @@
-# Directory path of each service that should be started.
-# Paths may be absolute or relative to the laaws-dev-scripts/runcluster
-# dir.
+# List of services to run.  Each line is <name>:<jar-file>, where <name> is
+# one of cfg, repo, poller, mdx, mdq, and <jar-file> is the path to the
+# corresponding uber jar, either absolute or relative to the
+# laaws-dev-scripts/runcluster directory.
 
-../../laaws-repository-service
-../../laaws-configservice
-../../laaws-poller
-#../../laaws-metadataextractor
-#../../laaws-metadataservice
+repo:../../laaws-repository-service/target/current-with-deps.jar
+cfg:../../laaws-configservice/target/current-with-deps.jar
+poller:../../laaws-poller/target/current-with-deps.jar
+mdx:../../laaws-metadataextractor/target/current-with-deps.jar
+#mdq:../../laaws-metadataservice/target/current-with-deps.jar

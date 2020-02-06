@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Setup to use embedded Derby database -->
+
+<!-- Currently each service runs its own embedded Derby, so mdq can't read
+     the metadata written by mdx. -->
+
+<lockss-config>
+
+  <!-- enclosing "org.lockss" so we don't have to repeat it -->
+  <property name="org.lockss">
+
+    <if>
+      <test serviceAbbrev="cfg"/>
+      <then>
+	<property name="configDbManager.datasource.className"
+		  value="org.apache.derby.jdbc.ClientDataSource"/>
+	<property name="configDbManager.datasource.portNumber" value="1527"/>
+	<property name="configDbManager.datasource.password"
+		  value="goodPassword"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="mdx"/>
+      <then>
+	<property name="metadataDbManager.datasource.className"
+		  value="org.apache.derby.jdbc.ClientDataSource"/>
+	<property name="metadataDbManager.datasource.portNumber" value="1528"/>
+	<property name="metadataDbManager.datasource.password"
+		  value="goodPassword"/>
+	<property name="jobDbManager.datasource.className"
+		  value="org.apache.derby.jdbc.ClientDataSource"/>
+	<property name="jobDbManager.datasource.portNumber" value="1529"/>
+	<property name="jobDbManager.datasource.password"
+		  value="goodPassword"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="mdq"/>
+      <then>
+	<property name="metadataDbManager.datasource.className"
+		  value="org.apache.derby.jdbc.ClientDataSource"/>
+	<property name="configDbManager.datasource.portNumber" value="1530"/>
+	<property name="metadataDbManager.datasource.password"
+		  value="goodPassword"/>
+<!-- 	<property name="jobDbManager.datasource.className" -->
+<!-- 		  value="org.apache.derby.jdbc.ClientDataSource"/> -->
+<!-- 	<property name="configDbManager.datasource.portNumber" value="1527"/> -->
+<!-- 	<property name="jobDbManager.datasource.password" -->
+<!-- 		  value="goodPassword"/> -->
+      </then>
+    </if>
+
+<!--     <if> -->
+<!--       <test serviceAbbrev="repo"/> -->
+<!--       <then> -->
+<!--       </then> -->
+<!--     </if> -->
+
+<!--     <if> -->
+<!--       <test serviceAbbrev="poller"/> -->
+<!--       <then> -->
+<!--       </then> -->
+<!--     </if> -->
+
+  </property>
+
+  <!-- End org.lockss -->
+</lockss-config>

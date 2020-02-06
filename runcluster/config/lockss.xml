@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- PLN-wide config -->
+
 <lockss-config>
   <property name="org.lockss">
 
-    <!--  PLN Configuration  -->
-    <property name="titleDbs">
-      <list>
-<!-- 	<value>titledb/titledb.xml</value> -->
-      </list>
-    </property>
+    <!-- Add your plugin registry URLs to this list -->
     <property name="plugin.registries">
       <list>
 <!-- 	<value>http://props.lockss.org:8001/demo/plugins/</value> -->
+      </list>
+    </property>
+
+    <!-- Add your titledb URLs to this list -->
+    <property name="titleDbs">
+      <list>
+<!-- 	<value>http://props.lockss.org:8001/demo/titledb/titledb.xml</value> -->
       </list>
     </property>
 
@@ -23,6 +27,7 @@
       </list>
     </property>
 
+    <!-- Automatically load (list in the UI) plugins named in this list -->
     <property name="plugin.registry">
       <list>
 <!-- 	<value>ca.sfu.lib.plugin.cartoons.SFUCartoonsPlugin</value> -->
@@ -43,23 +48,19 @@
 	</list>
       </property>
     </property>
+
+    <!-- List the IPs of the LOCKSS nodes in your PLN here  -->
     <property name="id.initialV3PeerList">
       <list>
-	<!--  sullockss-laaws-dev-01.stanford.edu  -->
-	<value>TCP:[171.66.236.42]:9729</value>
-	<!--  sullockss-laaws-dev-02.stanford.edu  -->
-	<value>TCP:[171.66.236.65]:9729</value>
-	<!--  sullockss-laaws-dev-03.stanford.edu  -->
-	<value>TCP:[171.66.236.66]:9729</value>
-	<!--  sullockss-laaws-dev-04.stanford.edu  -->
-	<value>TCP:[171.66.236.67]:9729</value>
-	<!--  bib87.ulb.ac.be  -->
-	<value>TCP:[164.15.1.87]:9729</value>
+	<value>TCP:[1.2.3.4]:9729</value>
       </list>
     </property>
+
     <property name="crawler.allowedPluginPermittedHosts" value=".*"/>
     <!--  Seems appropriate for PLNs  -->
     <property name="export.enabled" value="true"/>
+
+    <property name="metadataManager.indexing_enabled" value="true"/>
 
     <!-- No simultaneous crawls of AUs belonging to same plugin -->
     <property name="baseau.defaultFetchRateLimiterSource" value="plugin"/>
@@ -68,8 +69,8 @@
     <property name="crawlStatus.recordReferrers" value="First"/>
 
     <!--  Tuning  -->
-    <!--  Default 1 hour  -->
-    <property name="config.reloadInterval" value="30m"/>
+    <!--  Quick config reloads in dev  -->
+    <property name="config.reloadInterval" value="5m"/>
     <!--  Default 1 day  -->
     <property name="plugin.registries.crawlInterval" value="12h"/>
     <!--  Max number of simultaneous crawls.  Default 15  -->
@@ -99,10 +100,7 @@
       <property name="maxNominationSize" value="0"/>
     </property>
     <property name="poll.wrongGroupRetryTime" value="5m"/>
-    <!--
-	I haven't made this the default because I'm still not sure
-        it's desirable 
-    -->
+
     <property name="jms.connect.failover" value="true"/>
 
   </property>

@@ -19,6 +19,7 @@ usage() {
 
 logdir=logs
 piddir=pids
+libdir=tmplib
 
 # return absolute path of $1
 abspath() {                                               
@@ -26,49 +27,87 @@ abspath() {
     printf "%s/%s\n" "$(pwd)" "$(basename "$1")" )
 }
 
+declare -A svc_map
+
+read_services() {
+  while IFS=':' read name path; do
+    if [ -n "${name}" ]; then
+	svc_map[${name}]=${path}
+    fi
+  done < "$1"
+}
+
+
 # start a service
+# start_service <abbrev> <jar-file>
 start_service() {
-  local svc_dir=$1
-  local svc_name=`basename "$svc_dir"`
-  local rel_pid_file="$piddir/${svc_name}.pid"
-  if [ -f "$rel_pid_file" ]; then
-      echo "$svc_name already running"
+  local svc_name="$1"
+  local name_arg="--${svc_name}--"
+  local cfgsvc_args="-c http://lockss-u:lockss-p@localhost:24620 -l http://localhost:24620/config/file/cluster"
+  local local_props_args=
+  local bootstrap_args="-b resource:application.properties -b config/bootstrap.xml"
+  local extra_args=
+  local jar_file="${svc_map[${svc_name}]}"
+
+  local tmp_jar="${libdir}/${svc_name}.jar"
+
+  local pid_file="${piddir}/${svc_name}.pid"
+  if [ -f "${pid_file}" ]; then
+      echo "${svc_name} already running"
       return 1
   fi
-  touch "$rel_pid_file"
-  local pid_file=`abspath "$rel_pid_file"`
-  rm "$pid_file"
-  local log_file="$logdir/${svc_name}.log"
-  case "$svc_name" in
-    *config* )
-      local svc_args="-p $props" ;;
-    *repo* )
+  local log_file="${logdir}/${svc_name}.log"
+  case "${svc_name}" in
+    cfg )
+      cfgsvc_args=
+      cfg_cluster=
+      local_props_args="-l ${pln_props} -l ${cluster_props}"
+      ;;
+    repo )
       mkdir -p ./data/repo
       local repo_data=`abspath ./data/repo`
       touch config/repo.properties
       local repo_config=`abspath config/repo.properties`
-      echo "repo.spec=local:${repo_data}" > $repo_config
-      echo "repo.persistIndexName=localindex.ser" >> $repo_config
-      local svc_args="-c localhost -a --spring.config.location=file:$repo_config";;
+      echo "repo.spec=local:${repo_data}" > ${repo_config}
+      echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
+      extra_args="--spring.config.location=file:${repo_config}"
+      ;;
     * )
-      local svc_args="-c localhost" ;;
+      : ;;
   esac
 
-  ( cd "$svc_dir" 
-    ${runservice} -bg -pid "$pid_file" "-Dloader.path=${extra_jars}" -j $svc_args $java_args $other_args ) > $log_file # 2>&1
+
+  echo "Starting ${svc_name} in background"
+  cp -u "${jar_file}" "${tmp_jar}"
+
+  ( java ${java_args} "-Dloader.path=${extra_jars}" -jar ${tmp_jar} ${name_arg} ${bootstrap_args} ${cfgsvc_args} ${local_props_args} ${extra_args} >> ${log_file} 2>&1 &
+    pid=$!
+    if [ -n "${pid_file}" ]; then
+	echo ${pid} > ${pid_file}
+    fi
+    wait ${pid}
+    status=$?
+    if [ -n "${pid_file}" ]; then
+	rm -f ${pid_file}
+    fi
+    echo "${svc_name} stopped with status ${status} at `date`" >&2
+    exit 0 ) &
 }
 
 # stop a service
 stop_service() {
-  local svc_dir=$1
-  local svc_name=`basename "$svc_dir"`
-  local pid_file="$piddir/${svc_name}.pid"
-  if [ -f $pid_file ] ; then
-      kill $force `cat $pid_file`
-      echo "stopped $svc_name"
+  local svc_name="$1"
+  local pid_file="${piddir}/${svc_name}.pid"
+  if [ -f ${pid_file} ] ; then
+      echo "stopping ${svc_name}"
+      kill $force `cat ${pid_file}`
   else
-    echo "$svc_name not running"
+    echo "${svc_name} not running"
   fi
+}
+
+cleanup() {
+  /bin/rm -f $temp_svcs_file
 }
 
 verb="$1"
@@ -86,9 +125,9 @@ runservice=`abspath "../bin/runservice"`
 top_dir="../.."
 svcs_file="./config/services"
 extra_jars=lib
-props=`abspath "config/lockss.xml"`
-absclust=`abspath "config/cluster.xml"`
-java_args=
+pln_props="config/lockss.xml"
+cluster_props="config/cluster.xml"
+java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
 other_args=
 force=
 
@@ -98,24 +137,17 @@ while [ -n "$1" ]; do
       svcs_file="$2"
       shift; shift; continue ;;
     "-p" )
-      props="$2"
-      case "$props" in
-	http:* | https:* | lockss:* )
-	  : ;;
-	* )
-	  props=`abspath "$props"` ;;
-      esac
-
+      pln_props="$2"
       shift; shift; continue ;;
     -cluster )
-      absclust=`abspath "$2"`
+      cluster_props="$2"
       shift; shift; continue ;;
     -jar )
       absjar=`abspath "$2"`
       extra_jars="${extra_jars},$absjar"
       shift; shift; continue ;;
     -D* )
-      java_args="$java_args $1"
+      java_args="${java_args} $1"
       shift; continue ;;
     -force )
       force="-9"
@@ -143,22 +175,45 @@ case "$verb" in
     echo "clean not yet implemented"
     exit 1 ;;
   "start" )
-    if [ -z "$props" ]; then
+    if [ -z "${pln_props}" ]; then
 	echo "-p is required"
 	exit 1
     fi
-    mkdir -p "$logdir" "$piddir" ;;
+    mkdir -p "${logdir}" "${piddir}" "${libdir}" ;;
 esac
 
-services=`sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file"`
+mkdir -p ./data
 
-for svc in $services ; do
+temp_svcs_file=$(mktemp runcluster.XXXXX)
+
+# Clean up if script is interrupted or terminated.
+trap "cleanup" SIGINT SIGTERM 1 0
+
+
+#services=`sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file"`
+sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file" > ${temp_svcs_file}
+read_services ${temp_svcs_file}
+
+#set -x
+
+for name in ${!svc_map[*]}; do
   case "$verb" in
     "start" )
-      start_service "$svc"
+      start_service "${name}"
       continue ;;
     "stop" )
-      stop_service "$svc"
+      stop_service "$name"
       continue ;;
   esac
 done
+
+# for svc in $services ; do
+#   case "$verb" in
+#     "start" )
+#       start_service "$svc"
+#       continue ;;
+#     "stop" )
+#       stop_service "$svc"
+#       continue ;;
+#   esac
+# done

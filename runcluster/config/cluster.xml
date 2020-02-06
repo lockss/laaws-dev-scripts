@@ -1,18 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- LOCKSS & LCAP tuning parameters -->
-<!-- Common config for all test frameworks -->
-<!-- This is included in the list of prop files by all the run_xxx_daemon -->
-<!-- scripts -->
+<!-- Cluster-wide config -->
 
 <lockss-config>
 
-  <!-- enclosing "org.lockss" so we don't have to repeat it -->
   <property name="org.lockss">
 
-    <property name="plugin.keystore.location" value="org/lockss/plugin/lockss-testing.keystore"/>
 
-    <!-- Setup config-changed notifications -->
+    <!-- Use PostgreSQL -->
+    <property name="auxPropUrls" value="postgres.xml" />
+    <!-- Use embedded Derby -->
+<!--     <property name="auxPropUrls" value="derby.xml" /> -->
+
+    <property name="plugin.keystore.location"
+	      value="org/lockss/plugin/lockss-testing.keystore"/>
+
+    <property name="platform.ui.username" value="lockss-u"/>
+    <property name="platform.ui.password" value="SHA1:ac4fc8fa9930a24c8d002d541c37ca993e1bc40f"/>    <!-- lockss-p -->
+
+    <property name="daemon.pluginsCrawler" value="cfg"/>
+
+    <property name="ui.start" value="true" />
+
+    <property name="metadataManager.mandatoryFields"
+	      value="publisher;provider"/>
+    <property name="metadataManager.indexing_enabled" value="true"/>
+
+    <if>
+      <test serviceAbbrev="cfg"/>
+      <then>
+	<!-- cfg crawls plugin registries -->
+	<property name="crawler.enabled" value="true"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="repo"/>
+      <then>
+	<property name="ui.start" value="false" />
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="poller"/>
+      <then>
+	<!-- poller crawls other AUs -->
+	<property name="crawler.enabled" value="true"/>
+
+	<property name="poll.v3.enableV3Poller" value="true"/>
+	<property name="poll.v3.enableV3Voter" value="true"/>
+	<property name="scomm.enabled" value="true"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="mdx"/>
+      <then>
+	<property name="jobManager.enabled" value="true"/>
+
+      </then>
+    </if>
+
+    <!-- Enable config-changed notifications -->
     <property name="jms.broker.uri" value="tcp://localhost:61616"/>
     <property name="jms.connect.failover" value="true"/>
     <property name="config.enableJmsNotifications" value="true"/>
@@ -20,9 +69,7 @@
     <!-- Enable AuEvent propagation -->
     <property name="plugin.jms.enable" value="true"/>
 
-    <!-- Try to get a thread dump if a thread hangs -->
-    <property name="thread.hungThreadDump" value="true"/>
-
+    <!-- Clients connect to this repository -->
     <property name="repository.v2Repository"
 	      value="rest:lockss:http://localhost:24610"/>
 
@@ -38,7 +85,8 @@
       </list>
     </property>
 
-    <property name="daemon.pluginsCrawler" value="cfg"/>
+    <!-- Try to get a thread dump if a thread hangs -->
+    <property name="thread.hungThreadDump" value="true"/>
 
   </property>
 

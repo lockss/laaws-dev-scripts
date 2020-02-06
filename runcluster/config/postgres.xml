@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Setup to access a PostgreSQL database -->
+
+<lockss-config>
+  <property name="org.lockss">
+
+    <if>
+      <test serviceAbbrev="cfg"/>
+      <then>
+	<property name="configDbManager.datasource.className"
+		  value="org.postgresql.ds.PGSimpleDataSource"/>
+<!-- 	<property name="configDbManager.datasource.user" value="postgres"/> -->
+	<property name="configDbManager.datasource.password"
+		  value="goodPassword"/>
+<!-- 	<property name="configDbManager.datasource.serverName" -->
+<!-- 		  value="localhost"/> -->
+<!-- 	<property name="configDbManager.datasource.portNumber" -->
+<!-- 		  value="5432"/> -->
+<!-- 	<property name="configDBManager.datasource.schemaName" value="postgres"/> -->
+	<property name="configDBManager.datasource.schemaName" value="LOCKSS"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="mdx"/>
+      <then>
+	<property name="metadataDbManager.datasource.className"
+		  value="org.postgresql.ds.PGSimpleDataSource"/>
+<!-- 	<property name="metadataDbManager.datasource.user" value="postgres"/> -->
+	<property name="metadataDbManager.datasource.password"
+		  value="goodPassword"/>
+<!-- 	<property name="metadataDbManager.datasource.serverName" -->
+<!-- 		  value="localhost"/> -->
+<!-- 	<property name="metadataDbManager.datasource.portNumber" -->
+<!-- 		  value="5432"/> -->
+<!-- 	<property name="metadataDbManager.datasource.schemaName" value="postgres"/> -->
+	<property name="metadataDbManager.datasource.schemaName" value="LOCKSS"/>
+	<property name="jobDbManager.datasource.className"
+		  value="org.postgresql.ds.PGSimpleDataSource"/>
+<!-- 	<property name="jobDbManager.datasource.user" value="postgres"/> -->
+	<property name="jobDbManager.datasource.password"
+		  value="goodPassword"/>
+<!-- 	<property name="jobDbManager.datasource.serverName" -->
+<!-- 		  value="localhost"/> -->
+<!-- 	<property name="jobDbManager.datasource.portNumber" -->
+<!-- 		  value="5432"/> -->
+<!-- 	<property name="jobDbManager.datasource.schemaName" value="postgres"/> -->
+	<property name="jobDbManager.datasource.schemaName" value="LOCKSS"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="mdq"/>
+      <then>
+	<property name="metadataDbManager.datasource.className"
+		  value="org.postgresql.ds.PGSimpleDataSource"/>
+<!-- 	<property name="metadataDbManager.datasource.user" value="postgres"/> -->
+	<property name="metadataDbManager.datasource.password"
+		  value="goodPassword"/>
+<!-- 	<property name="metadataDbManager.datasource.serverName" -->
+<!-- 		  value="localhost"/> -->
+<!-- 	<property name="metadataDbManager.datasource.portNumber" -->
+<!-- 		  value="5432"/> -->
+<!-- 	<property name="metadataDbManager.datasource.schemaName" value="postgres"/> -->
+	<property name="metadataDbManager.datasource.schemaName" value="LOCKSS"/>
+	<property name="jobDbManager.datasource.className"
+		  value="org.postgresql.ds.PGSimpleDataSource"/>
+<!-- 	<property name="jobDbManager.datasource.user" value="postgres"/> -->
+	<property name="jobDbManager.datasource.password"
+		  value="goodPassword"/>
+<!-- 	<property name="jobDbManager.datasource.serverName" -->
+<!-- 		  value="localhost"/> -->
+<!-- 	<property name="jobDbManager.datasource.portNumber" -->
+<!-- 		  value="5432"/> -->
+<!-- 	<property name="jobDbManager.datasource.schemaName" value="postgres"/> -->
+	<property name="jobDbManager.datasource.schemaName" value="LOCKSS"/>
+      </then>
+    </if>
+
+<!--     <if> -->
+<!--       <test serviceAbbrev="repo"/> -->
+<!--       <then> -->
+<!--       </then> -->
+<!--     </if> -->
+
+<!--     <if> -->
+<!--       <test serviceAbbrev="poller"/> -->
+<!--       <then> -->
+<!--       </then> -->
+<!--     </if> -->
+
+  </property>
+
+  <!-- End org.lockss -->
+</lockss-config>
