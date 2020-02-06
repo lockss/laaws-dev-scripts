@@ -31,6 +31,7 @@
       <then>
 	<!-- cfg crawls plugin registries -->
 	<property name="crawler.enabled" value="true"/>
+	<property name="daemon.crawlMode" value="Plugins"/>
       </then>
     </if>
 
@@ -46,7 +47,7 @@
       <then>
 	<!-- poller crawls other AUs -->
 	<property name="crawler.enabled" value="true"/>
-
+	<property name="daemon.crawlMode" value="NonPlugins"/>
 	<property name="poll.v3.enableV3Poller" value="true"/>
 	<property name="poll.v3.enableV3Voter" value="true"/>
 	<property name="scomm.enabled" value="true"/>
