@@ -1,4 +1,5 @@
 # Running LOCKSS in a Development Environment
+Version 3
 
 `runcluster` is a framework to run a set of LOCKSS services (a cluster)
 comprising a single LOCKSS node, in a development environment.  It's a work
@@ -22,16 +23,24 @@ portNumber attributes in config/postgres.xml.
 
 ## Running a cluster
 
-Each service to be run must be locally built from source.  To run a minimal
-cluster (config service, repository service, and poller/crawler service),
-git clone laaws-configservice, laaws-repository-service, and laaws-poller
-into sibling dirs of this project, mvn package each one, cd to this dir and
-run "./start".  Additional services can be added by editing config/services
-or by pointing to a different services file.  Run ./start -h for options.
+The individual services may be run from release or snapshot artifacts
+downloaded from a Maven repository, or locally built from source.  To run
+snapshot versions, change to this directory and run `./start`.  (Note: the
+first time this is done Maven will fetch jars totalling .7-1.1GB.)  To use
+locally built jars in sibling directories run `./start -local`.  (See
+config/services.snapshot or config/services.local.)  The three essential
+services (config service, repository service, poller/crawler service) are
+run by default; to add the metadata services uncomment those lines in
+config/services.xxx.  Run `./start -h` for more options.
 
+## V3 Changes:
 
+- config/services replaced by config/services.snapshot and
+  config/services.local.  Format has changed again.
 
-## Changes from V1:
+- Service jars may be fetched from a maven repository.
+
+## V2 Changes:
 
 - config/services format has changed.
 

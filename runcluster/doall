@@ -4,7 +4,8 @@ usage() {
   echo "Run a LAAWS cluster."
   echo "Usage: $0 [start | stop] [-options]"
   echo "Options:"
-  echo "  -svcs <file> Use alternate services file (default config/services)"
+  echo "  -svcs <file> Use alternate services file (default config/services.snapshot)"
+  echo "  -local       Synonym for -svcs config/services.local"
   echo "  -p lockss:<name>  Load PLN config from http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -p <url>     Load PLN config from prop server <url>"
   echo "  -p <file>    Load PLN config from <file> (default config/lockss.xml)"
@@ -15,99 +16,7 @@ usage() {
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
   echo "  -force       Use with \"stop\" to force hung JVMs to exit"
-}
-
-logdir=logs
-piddir=pids
-libdir=tmplib
-
-# return absolute path of $1
-abspath() {                                               
-  ( cd "$(dirname "$1")"
-    printf "%s/%s\n" "$(pwd)" "$(basename "$1")" )
-}
-
-declare -A svc_map
-
-read_services() {
-  while IFS=':' read name path; do
-    if [ -n "${name}" ]; then
-	svc_map[${name}]=${path}
-    fi
-  done < "$1"
-}
-
-
-# start a service
-# start_service <abbrev> <jar-file>
-start_service() {
-  local svc_name="$1"
-  local name_arg="--${svc_name}--"
-  local cfgsvc_args="-c http://lockss-u:lockss-p@localhost:24620 -l http://localhost:24620/config/file/cluster"
-  local local_props_args=
-  local bootstrap_args="-b resource:application.properties -b config/bootstrap.xml"
-  local extra_args=
-  local jar_file="${svc_map[${svc_name}]}"
-
-  local tmp_jar="${libdir}/${svc_name}.jar"
-
-  local pid_file="${piddir}/${svc_name}.pid"
-  if [ -f "${pid_file}" ]; then
-      echo "${svc_name} already running"
-      return 1
-  fi
-  local log_file="${logdir}/${svc_name}.log"
-  case "${svc_name}" in
-    cfg )
-      cfgsvc_args=
-      cfg_cluster=
-      local_props_args="-l ${pln_props} -l ${cluster_props}"
-      ;;
-    repo )
-      mkdir -p ./data/repo
-      local repo_data=`abspath ./data/repo`
-      touch config/repo.properties
-      local repo_config=`abspath config/repo.properties`
-      echo "repo.spec=local:${repo_data}" > ${repo_config}
-      echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
-      extra_args="--spring.config.location=file:${repo_config}"
-      ;;
-    * )
-      : ;;
-  esac
-
-
-  echo "Starting ${svc_name} in background"
-  cp -u "${jar_file}" "${tmp_jar}"
-
-  ( java ${java_args} "-Dloader.path=${extra_jars}" -jar ${tmp_jar} ${name_arg} ${bootstrap_args} ${cfgsvc_args} ${local_props_args} ${extra_args} >> ${log_file} 2>&1 &
-    pid=$!
-    if [ -n "${pid_file}" ]; then
-	echo ${pid} > ${pid_file}
-    fi
-    wait ${pid}
-    status=$?
-    if [ -n "${pid_file}" ]; then
-	rm -f ${pid_file}
-    fi
-    echo "${svc_name} stopped with status ${status} at `date`" >&2
-    exit 0 ) &
-}
-
-# stop a service
-stop_service() {
-  local svc_name="$1"
-  local pid_file="${piddir}/${svc_name}.pid"
-  if [ -f ${pid_file} ] ; then
-      echo "stopping ${svc_name}"
-      kill $force `cat ${pid_file}`
-  else
-    echo "${svc_name} not running"
-  fi
-}
-
-cleanup() {
-  /bin/rm -f $temp_svcs_file
+  echo "  -U           Force maven to check for updated artifact"
 }
 
 verb="$1"
@@ -120,22 +29,196 @@ case "$verb" in
     exit 1
 esac
 
-runservice=`abspath "../bin/runservice"`
+# dirs
+logdir=logs
+piddir=pids
+libdir=tmplib
 
-top_dir="../.."
-svcs_file="./config/services"
-extra_jars=lib
+l4j_xml=config/log4j2-runcluster.xml
+
+# defaults
+svcs_file="./config/services.snapshot"
+svcs_file_local="./config/services.local"
+forcekill=
+mvn_U=
+
+declare -A svc_map		# maps svc_name -> jar or artifact
+declare -a svc_list		# orodered array or svc_name
+
+cp_jars=lib			# jars to put on classpath.  "lib" is
+				# required for uber jar
 pln_props="config/lockss.xml"
-cluster_props="config/cluster.xml"
-java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
+cluster_props="config/cluster.xml config/cluster.opt"
 other_args=
-force=
+java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
+
+### Functions ###
+
+# preface_each space_separated_string prefix
+preface_each() {
+  local words=`trim "$1"`
+  if [ -z "$words" ]; then
+      return
+  fi
+  echo `echo " " $words | sed 's/  */ '"$2"' /g'`
+}
+
+# trim leading and trailing blanks
+trim() {
+  echo `echo $1 | sed -e 's/^ *//' -e 's/ *$//'`
+}
+
+# return absolute path of $1
+abspath() {                                               
+  ( cd "$(dirname "$1")"
+    printf "%s/%s\n" "$(pwd)" "$(basename "$1")" )
+}
+
+# load svc_map and svc_list from services file
+read_services() {
+  while IFS='=' read name path; do
+    if [ -n "${name}" ]; then
+	svc_map[${name}]=${path}
+	svc_list+=( ${name} )
+    fi
+  done < "$1"
+}
+
+
+# Write service uber jar to temp dir, return (echo) jar name in temp dir
+# copy_jar jar-file   or
+# copy_jar mvn:groupid:artifactid:version
+copy_jar() {
+  case "$1" in
+    mvn:* )
+      # mvn:artifact - strip "mvn:"
+      local art=${1#mvn:}
+
+      # append :jar:with-deps if necessary
+      case "${art}" in
+	*:jar:with-deps ) ;;
+	* ) art="${art}:jar:with-deps" ;;
+      esac
+      # select appropriate maven repo
+      case "${art}" in
+	*SNAPSHOT* )
+	  mvn_repo="https://oss.sonatype.org/content/repositories/snapshots"
+	  ;;
+	* )
+	  mvn_repo="https://mvnrepository.com/artifact/"
+	  ;;
+      esac
+      # fetch jar to libdir
+      echo "Fetching ${art}" >&2
+      mvn ${mvn_U} -B dependency:copy \
+	  -DrepoUrl=${mvn_repo} \
+	  -Dartifact=${art} \
+	  -DoutputDirectory="${libdir}" \
+	  -Dmdep.useBaseVersion \
+	  -Dtransitive=false >>logs/maven.log
+      if [ $? -ne 0 ]; then
+	  echo "Couldn't fetch ${art}, skipping it" >&2
+	  return
+      fi
+      # construct jar file name from artifact and return it
+      local jar=`echo "${art}" | sed -r 's/[^:]+:([^:]+):([^:]+):?.*/\1-\2-with-deps.jar/'`
+      echo "${libdir}/${jar}"
+      ;;
+    * )
+      # copy jar to libdir, return name
+      local jar="${libdir}/${svc_name}.jar"
+      cp -u "${jar_file}" "${jar}"
+      echo "${jar}"
+      ;;
+  esac
+}
+
+# start a service
+# start_service <name> <jar-file>
+start_service() {
+  local svc_name="$1"
+  local name_arg="--${svc_name}--"
+  local cfgsvc_args="-c http://lockss-u:lockss-p@localhost:24620 -l http://localhost:24620/config/file/cluster"
+  local local_props_args=
+  local bootstrap_args="-b resource:application.properties -b config/bootstrap.xml"
+  local extra_args=
+  local jar_file="${svc_map[${svc_name}]}"
+
+  local pid_file="${piddir}/${svc_name}.pid"
+  if [ -f "${pid_file}" ]; then
+      echo "${svc_name} already running"
+      return 1
+  fi
+  case "${svc_name}" in
+    cfg )
+      # cfgsvc loads main config files, does not load from cfgsvc
+      local_props_args==`preface_each "${pln_props} ${cluster_props}" -l`
+#      local_props_args="-l ${pln_props} -l ${cluster_props}"
+      cfgsvc_args=
+      ;;
+    repo )
+      # repo gets spring config file with repo type & location
+      mkdir -p ./data/repo
+      local repo_data=`abspath ./data/repo`
+      touch config/repo.properties
+      local repo_config=`abspath config/repo.properties`
+      echo "repo.spec=local:${repo_data}" > ${repo_config}
+      echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
+      extra_args="--spring.config.location=file:${repo_config}"
+      ;;
+    * )
+      : ;;
+  esac
+
+  local std_file="${logdir}/${svc_name}.std"
+  local tmp_jar=`copy_jar "${jar_file}"`
+  echo "Starting ${svc_name}"
+  if [ -n "${tmp_jar}" ]; then
+      ( env REPO_MAX_WARC_SIZE=100000000 \
+            LOG4J_LOCKSS_CONFIG="${l4j_xml}" \
+            LOCKSS_LOG_DIR="${logdir}" \
+            LOCKSS_SERVICE_NAME="${svc_name}" \
+	    java ${java_args} "-Dloader.path=${cp_jars}" -jar ${tmp_jar} ${name_arg} ${bootstrap_args} ${cfgsvc_args} ${local_props_args} ${other_args} ${extra_args} > ${std_file} 2>&1 &
+	pid=$!
+	if [ -n "${pid_file}" ]; then
+	    echo ${pid} > ${pid_file}
+	fi
+	wait ${pid}
+	status=$?
+	if [ -n "${pid_file}" ]; then
+	    rm -f ${pid_file}
+	fi
+	echo "${svc_name} stopped with status ${status} at `date`" >&2
+	exit 0 ) &
+  fi
+}
+
+# stop a service
+stop_service() {
+  local svc_name="$1"
+  local pid_file="${piddir}/${svc_name}.pid"
+  if [ -f ${pid_file} ] ; then
+      echo "stopping ${svc_name}"
+      kill $forcekill `cat ${pid_file}`
+  else
+    echo "${svc_name} not running"
+  fi
+}
+
+cleanup() {
+  /bin/rm -f $temp_svcs_file
+}
+
+### Main ###
 
 while [ -n "$1" ]; do
   case "$1" in
     "-svcs" )
       svcs_file="$2"
       shift; shift; continue ;;
+    "-local" )
+      svcs_file="${svcs_file_local}"
+      shift; continue ;;
     "-p" )
       pln_props="$2"
       shift; shift; continue ;;
@@ -144,13 +227,16 @@ while [ -n "$1" ]; do
       shift; shift; continue ;;
     -jar )
       absjar=`abspath "$2"`
-      extra_jars="${extra_jars},$absjar"
+      cp_jars="${cp_jars},$absjar"
       shift; shift; continue ;;
     -D* )
       java_args="${java_args} $1"
       shift; continue ;;
     -force )
-      force="-9"
+      forcekill="-9"
+      shift; continue ;;
+    -U )
+      mvn_U="-U"
       shift; continue ;;
     -a | -g | -r )
       other_args="$other_args $1 $2"
@@ -168,8 +254,6 @@ while [ -n "$1" ]; do
   break;
 done
 
-other_args="$other_args -cluster $absclust"
-
 case "$verb" in
   "clean" )
     echo "clean not yet implemented"
@@ -179,10 +263,8 @@ case "$verb" in
 	echo "-p is required"
 	exit 1
     fi
-    mkdir -p "${logdir}" "${piddir}" "${libdir}" ;;
+    mkdir -p "${logdir}" "${piddir}" "${libdir}" ./data ;;
 esac
-
-mkdir -p ./data
 
 temp_svcs_file=$(mktemp runcluster.XXXXX)
 
@@ -190,13 +272,12 @@ temp_svcs_file=$(mktemp runcluster.XXXXX)
 trap "cleanup" SIGINT SIGTERM 1 0
 
 
-#services=`sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file"`
 sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file" > ${temp_svcs_file}
 read_services ${temp_svcs_file}
 
 #set -x
 
-for name in ${!svc_map[*]}; do
+for name in ${svc_list[@]}; do
   case "$verb" in
     "start" )
       start_service "${name}"
@@ -206,14 +287,3 @@ for name in ${!svc_map[*]}; do
       continue ;;
   esac
 done
-
-# for svc in $services ; do
-#   case "$verb" in
-#     "start" )
-#       start_service "$svc"
-#       continue ;;
-#     "stop" )
-#       stop_service "$svc"
-#       continue ;;
-#   esac
-# done
