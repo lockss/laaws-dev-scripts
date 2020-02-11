@@ -6,6 +6,7 @@
   <property name="org.lockss.platform">
 
     <property name="tmpDir" value="data/temp" />
+    <property name="logdirectory" value="logs" />
 
     <property name="v3.identity" value="TCP:[127.0.0.1]:9720" />
 
