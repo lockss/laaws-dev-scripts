@@ -1,22 +1,27 @@
 #!/bin/bash
 
 usage() {
-  echo "Run a LAAWS cluster."
-  echo "Usage: $0 [start | stop] [-options]"
+  echo "Usage: $0 (start | stop) [ svc_name ... ] [-options]"
+  echo "  Starts or stops a set of LOCKSS services, either those named on the"
+  echo "  command line or the entire set defined in config/services.xxx"
   echo "Options:"
-  echo "  -svcs <file> Use alternate services file (default config/services.snapshot)"
-  echo "  -local       Synonym for -svcs config/services.local"
+  echo "  -svcs <file> Use alternate services file (default config/services.snapshot,"
+  echo "               which runs SNAPSHOT artifacts downloaded from maven central)"
+  echo "  -local       Synonym for -svcs config/services.local (which runs"
+  echo "               locally built service jars)"
   echo "  -p lockss:<name>  Load PLN config from http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -p <url>     Load PLN config from prop server <url>"
   echo "  -p <file>    Load PLN config from <file> (default config/lockss.xml)"
-  echo "  -cluster <file>  Load cluster config from <file (default config/cluster.xml)"
+  echo "  -cluster <file>  Load cluster config from <file> (default config/cluster.xml)"
+  echo "  -c <file>    Load additional config from <file> (incl tdb .xml)"
+  echo "  -x <dir>     Load config from dir/*.xml (typically used for tdb files)"
   echo "  -g <group>   Set polling group to <group>"
   echo "  -a <app_arg> Add <app_arg> to command line"
   echo "  -r <credentials_file> Load Rest client credentials from file"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
+  echo "  -U           Force maven to check for updated artifacts"
   echo "  -force       Use with \"stop\" to force hung JVMs to exit"
-  echo "  -U           Force maven to check for updated artifact"
 }
 
 verb="$1"
@@ -43,13 +48,13 @@ forcekill=
 mvn_U=
 
 declare -A svc_map		# maps svc_name -> jar or artifact
-declare -a svc_list		# orodered array or svc_name
+svc_list=()			# ordered array of svc_name
 
 cp_jars=lib			# jars to put on classpath.  "lib" is
 				# required for uber jar
 pln_props="config/lockss.xml"
 cluster_props="config/cluster.xml config/cluster.opt"
-other_args=
+other_props=
 java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
 
 ### Functions ###
@@ -86,10 +91,14 @@ read_services() {
 
 
 # Write service uber jar to temp dir, return (echo) jar name in temp dir
-# copy_jar jar-file   or
-# copy_jar mvn:groupid:artifactid:version
+# copy_jar svc_name jar-file   or
+# copy_jar svc_name mvn:groupid:artifactid:version
 copy_jar() {
-  case "$1" in
+  case "$2" in
+    "" )
+      echo "No service definition found for $1" >&2
+      return
+      ;;
     mvn:* )
       # mvn:artifact - strip "mvn:"
       local art=${1#mvn:}
@@ -171,9 +180,9 @@ start_service() {
   esac
 
   local std_file="${logdir}/${svc_name}.std"
-  local tmp_jar=`copy_jar "${jar_file}"`
-  echo "Starting ${svc_name}"
+  local tmp_jar=`copy_jar "${svc_name}" "${jar_file}"`
   if [ -n "${tmp_jar}" ]; then
+      echo "Starting ${svc_name}"
       ( env REPO_MAX_WARC_SIZE=100000000 \
             LOG4J_LOCKSS_CONFIG="${l4j_xml}" \
             LOCKSS_LOG_DIR="${logdir}" \
@@ -211,6 +220,16 @@ cleanup() {
 
 ### Main ###
 
+# process service name args, if any
+svc_names=
+while [ -n "$1" ]; do
+  case "$1" in
+    -* ) break ;;
+    * ) svc_names="${svc_names} $1"
+	shift; continue ;;
+  esac
+done
+
 while [ -n "$1" ]; do
   case "$1" in
     "-svcs" )
@@ -238,8 +257,11 @@ while [ -n "$1" ]; do
     -U )
       mvn_U="-U"
       shift; continue ;;
-    -a | -g | -r )
+    -a | -g | -r | -x )
       other_args="$other_args $1 $2"
+      shift; shift; continue ;;
+    -c )
+      other_args="$other_args -l $2"
       shift; shift; continue ;;
     -h )
       usage
@@ -274,6 +296,12 @@ trap "cleanup" SIGINT SIGTERM 1 0
 
 sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file" > ${temp_svcs_file}
 read_services ${temp_svcs_file}
+if [ -n "${svc_names}" ]; then
+    svc_list=()
+    for name in ${svc_names}; do
+      svc_list+=( ${name} )
+    done
+fi
 
 #set -x
 

@@ -33,6 +33,19 @@ services (config service, repository service, poller/crawler service) are
 run by default; to add the metadata services uncomment those lines in
 config/services.xxx.  Run `./start -h` for more options.
 
+To test a plugin without signing and uploading it to a plugin registry,
+package the plugin with `mvn package -Dtesting` in the plugin project, then
+supply the name of the plugin jar with `-jar`.  (E.g., if the plugin
+project is in a sibling dir to this project, `-jar
+../../<plugin-project>/target/pluginjars/fully.qualified.NamePlugin.jar`.)
+Repeat the `-jar` argument for addtional plugins.
+
+To load title DBs, place the .tdb files in or below src/main/tdb in the
+plugin project (or otherwise process them with lockss-tdbxml-maven-plugin
+or lockss-tdb-processor to produce .xml files) and point to them
+individually with `-l` or load all tdb .xml files in a directory with -x,
+e.g., `-x ../../<plugin-project>/target/tdbxml`.
+
 ## V3 Changes:
 
 - config/services replaced by config/services.snapshot and
