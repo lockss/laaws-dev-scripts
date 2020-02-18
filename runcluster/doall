@@ -24,6 +24,8 @@ usage() {
   echo "  -force       Use with \"stop\" to force hung JVMs to exit"
 }
 
+shopt -s nullglob
+
 verb="$1"
 shift
 
@@ -207,8 +209,19 @@ stop_service() {
   local svc_name="$1"
   local pid_file="${piddir}/${svc_name}.pid"
   if [ -f ${pid_file} ] ; then
-      echo "stopping ${svc_name}"
-      kill $forcekill `cat ${pid_file}`
+      local pid="`cat ${pid_file}`"
+      if [ -n "${pid}" ] ; then
+	  if kill -s 0 "${pid}" ; then
+	      echo "stopping ${svc_name}"
+	      kill $forcekill `cat ${pid_file}`
+	  else
+	    echo "${svc_name} not running, deleting stale pid file"
+	    rm -f "${pid_file}"
+	  fi
+      else
+	echo "${svc_name} not running, deleting empty pid file"
+	rm -f "${pid_file}"
+      fi
   else
     echo "${svc_name} not running"
   fi
@@ -245,8 +258,10 @@ while [ -n "$1" ]; do
       cluster_props="$2"
       shift; shift; continue ;;
     -jar )
-      absjar=`abspath "$2"`
-      cp_jars="${cp_jars},$absjar"
+      # copy jar to tmplib
+      tmptmpjar="${libdir}/`basename $2`"
+      cp -u "$2" "${tmptmpjar}"
+      cp_jars="${cp_jars},${tmptmpjar}"
       shift; shift; continue ;;
     -D* )
       java_args="${java_args} $1"
@@ -296,14 +311,29 @@ trap "cleanup" SIGINT SIGTERM 1 0
 
 sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file" > ${temp_svcs_file}
 read_services ${temp_svcs_file}
+
 if [ -n "${svc_names}" ]; then
+    # use explicit list of services
     svc_list=()
     for name in ${svc_names}; do
       svc_list+=( ${name} )
     done
+else
+  case "$verb" in
+    "start" )
+      # use list from services file (svc_list already set by read_services)
+      ;;
+    "stop" )
+      # use list of running services (pids/*.pid)
+      svc_list=()
+      for pidfile in ${piddir}/*.pid; do
+	svc_list+=( $(basename -s .pid "$pidfile") )
+      done
+      ;;
+  esac
 fi
 
-#set -x
+#  set -x
 
 for name in ${svc_list[@]}; do
   case "$verb" in
