@@ -9,6 +9,8 @@ usage() {
   echo "               which runs SNAPSHOT artifacts downloaded from maven central)"
   echo "  -local       Synonym for -svcs config/services.local (which runs"
   echo "               locally built service jars)"
+  echo "  -pg          Use external PostgreSQL database (default)"
+  echo "  -derby       Use embedded Derby database"
   echo "  -p lockss:<name>  Load PLN config from http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -p <url>     Load PLN config from prop server <url>"
   echo "  -p <file>    Load PLN config from <file> (default config/lockss.xml)"
@@ -48,6 +50,7 @@ svcs_file="./config/services.snapshot"
 svcs_file_local="./config/services.local"
 forcekill=
 mvn_U=
+db_props=config/postgres.xml
 
 declare -A svc_map		# maps svc_name -> jar or artifact
 svc_list=()			# ordered array of svc_name
@@ -162,7 +165,7 @@ start_service() {
   case "${svc_name}" in
     cfg )
       # cfgsvc loads main config files, does not load from cfgsvc
-      local_props_args==`preface_each "${pln_props} ${cluster_props}" -l`
+      local_props_args==`preface_each "${pln_props} ${cluster_props} ${db_props}" -l`
 #      local_props_args="-l ${pln_props} -l ${cluster_props}"
       cfgsvc_args=
       ;;
@@ -256,6 +259,12 @@ while [ -n "$1" ]; do
     -cluster )
       cluster_props="$2"
       shift; shift; continue ;;
+    -pg | -postgres )
+      db_props=config/postgres.xml
+      shift; continue ;;
+    -derby )
+      db_props=config/derby.xml
+      shift; continue ;;
     -jar )
       # copy jar to tmplib
       tmptmpjar="${libdir}/`basename $2`"

@@ -43,7 +43,7 @@ Repeat the `-jar` argument for addtional plugins.
 To load title DBs, place the .tdb files in or below src/main/tdb in the
 plugin project (or otherwise process them with lockss-tdbxml-maven-plugin
 or lockss-tdb-processor to produce .xml files) and point to them
-individually with `-l` or load all tdb .xml files in a directory with -x,
+individually with `-c` or load all tdb .xml files in a directory with -x,
 e.g., `-x ../../<plugin-project>/target/tdbxml`.
 
 ## V3 Changes:

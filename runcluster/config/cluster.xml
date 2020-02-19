@@ -6,12 +6,6 @@
 
   <property name="org.lockss">
 
-
-    <!-- Use PostgreSQL -->
-    <property name="auxPropUrls" value="postgres.xml" />
-    <!-- Use embedded Derby -->
-<!--     <property name="auxPropUrls" value="derby.xml" /> -->
-
     <property name="plugin.keystore.location"
 	      value="org/lockss/plugin/lockss-testing.keystore"/>
 
