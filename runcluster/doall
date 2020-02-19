@@ -103,8 +103,7 @@ copy_jar() {
       ;;
     mvn:* )
       # mvn:artifact - strip "mvn:"
-      local art=${1#mvn:}
-
+      local art=${2#mvn:}
       # append :jar:with-deps if necessary
       case "${art}" in
 	*:jar:with-deps ) ;;
