@@ -1,17 +1,16 @@
 # Running LOCKSS in a Development Environment
-Version 3
+Version 4
 
 `runcluster` is a framework to run a set of LOCKSS services (a cluster)
 comprising a single LOCKSS node, in a development environment.  It's a work
 in progress; details are likely to change.
 
-## Database Setup (once):
+## Optional Database Setup
 
-By default, a PostgreSQL database is required.  Derby may be used instead
-by editing config/cluster.xml, but the metadata query service is not yet
-supported with Derby.
-
-To use PostgreSQL, install, initialize and start PostgreSQL as appropriate
+By default, an internal Derby database is used.  This should be sufficient
+for normal development use, and requires no setup.  For better performance
+and larger databases, PostgreSQL may be used instead.  It requires some
+one-time setup.  Install, initialize and start PostgreSQL as appropriate
 for your OS.  Then create the LOCKSS role with:
 
     sudo -u postgres createuser -d -P LOCKSS -S -R
@@ -21,17 +20,20 @@ for your OS.  Then create the LOCKSS role with:
 If you are using a port other than 5432, uncomment and edit all the
 portNumber attributes in config/postgres.xml.
 
+Add `-pg` to the `./start` command line.
+
 ## Running a cluster
 
 The individual services may be run from release or snapshot artifacts
 downloaded from a Maven repository, or locally built from source.  To run
-snapshot versions, change to this directory and run `./start`.  (Note: the
-first time this is done Maven will fetch jars totalling .7-1.1GB.)  To use
-locally built jars in sibling directories run `./start -local`.  (See
-config/services.snapshot or config/services.local.)  The three essential
-services (config service, repository service, poller/crawler service) are
-run by default; to add the metadata services uncomment those lines in
-config/services.xxx.  Run `./start -h` for more options.
+snapshot versions, change to this directory and run `./start`, or `./start
+-pg` to use PostgreSQL.  (Note: the first time this is done Maven will
+fetch jars totalling .7-1.1GB.)  To use locally built jars in sibling
+directories run `./start -local [-pg]`.  (See config/services.snapshot or
+config/services.local.)  The three essential services (config service,
+repository service, poller/crawler service) are run by default; to add the
+metadata services uncomment those lines in config/services.xxx.  Run
+`./start -h` for more options.
 
 To test a plugin without signing and uploading it to a plugin registry,
 package the plugin with `mvn package -Dtesting` in the plugin project, then
@@ -45,6 +47,10 @@ plugin project (or otherwise process them with lockss-tdbxml-maven-plugin
 or lockss-tdb-processor to produce .xml files) and point to them
 individually with `-c` or load all tdb .xml files in a directory with -x,
 e.g., `-x ../../<plugin-project>/target/tdbxml`.
+
+## V4 Changes:
+
+- Derby is supported, and is the default.  Use -pg for PostgreSQL.
 
 ## V3 Changes:
 

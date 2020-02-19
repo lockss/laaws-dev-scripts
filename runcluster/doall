@@ -50,7 +50,7 @@ svcs_file="./config/services.snapshot"
 svcs_file_local="./config/services.local"
 forcekill=
 mvn_U=
-db_props=config/postgres.xml
+db_props=config/derby.xml
 
 declare -A svc_map		# maps svc_name -> jar or artifact
 svc_list=()			# ordered array of svc_name
@@ -165,7 +165,7 @@ start_service() {
   case "${svc_name}" in
     cfg )
       # cfgsvc loads main config files, does not load from cfgsvc
-      local_props_args==`preface_each "${pln_props} ${cluster_props} ${db_props}" -l`
+      local_props_args=`preface_each "${pln_props} ${cluster_props} ${db_props}" -l`
 #      local_props_args="-l ${pln_props} -l ${cluster_props}"
       cfgsvc_args=
       ;;

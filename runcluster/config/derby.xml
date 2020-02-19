@@ -6,6 +6,8 @@
 
   <property name="org.lockss">
 
+    <property name="db.derbyDbDir" value="data/derbydata"/>
+
     <if>
       <test serviceAbbrev="cfg"/>
       <then>
@@ -37,6 +39,7 @@
     <if>
       <test serviceAbbrev="mdq"/>
       <then>
+	<property name="metadataDbManager.waitForExternalSetup" value="true"/>
 	<property name="metadataDbManager.datasource.className"
 		  value="org.apache.derby.jdbc.ClientDataSource"/>
 	<property name="metadataDbManager.datasource.portNumber" value="1527"/>
