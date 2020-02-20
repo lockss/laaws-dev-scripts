@@ -43,6 +43,8 @@ logdir=logs
 piddir=pids
 libdir=tmplib
 
+mkdir -p "${logdir}" "${piddir}" "${libdir}" ./data
+
 l4j_xml=config/log4j2-runcluster.xml
 
 # defaults
@@ -307,8 +309,7 @@ case "$verb" in
     if [ -z "${pln_props}" ]; then
 	echo "-p is required"
 	exit 1
-    fi
-    mkdir -p "${logdir}" "${piddir}" "${libdir}" ./data ;;
+    fi ;;
 esac
 
 temp_svcs_file=$(mktemp runcluster.XXXXX)
