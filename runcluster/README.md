@@ -48,6 +48,14 @@ or lockss-tdb-processor to produce .xml files) and point to them
 individually with `-c` or load all tdb .xml files in a directory with -x,
 e.g., `-x ../../<plugin-project>/target/tdbxml`.
 
+Additional config parameters may be placed in config/cluster.opt .  This
+file is not under source control so is a better place for users to set
+params than either lockss.xml or cluster.xml.  It's a Java Properties file,
+not xml, so only simple assignments are allowed.  E.g., to set the log
+level of MyClass to debug3:
+
+    org.lockss.log.MyClass.level=debug3
+
 ## V4 Changes:
 
 - Derby is supported, and is the default.  Use -pg for PostgreSQL.
