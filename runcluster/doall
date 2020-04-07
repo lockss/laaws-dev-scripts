@@ -136,7 +136,7 @@ copy_jar() {
 	  return
       fi
       # construct jar file name from artifact and return it
-      local jar=`echo "${art}" | sed -r 's/[^:]+:([^:]+):([^:]+):?.*/\1-\2-with-deps.jar/'`
+      local jar=`echo "${art}" | sed -E 's/[^:]+:([^:]+):([^:]+):?.*/\1-\2-with-deps.jar/'`
       echo "${libdir}/${jar}"
       ;;
     * )
