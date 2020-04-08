@@ -66,6 +66,18 @@ java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -
 
 ### Functions ###
 
+# copy file iff destination doesn't exist or is older than source
+# similar to cp -u, which MacOS's native cp doesn't support
+cp_dash_u() {
+  if [ ! -e "$1" ]; then
+    echo "cp: No such file: $1" >&2
+    return 1
+  fi
+  if [ ! -e "$2" -o "$1" -nt "$2" ]; then
+    cp "$1" "$2"
+  fi
+}
+
 # preface_each space_separated_string prefix
 preface_each() {
   local words=`trim "$1"`
@@ -142,7 +154,7 @@ copy_jar() {
     * )
       # copy jar to libdir, return name
       local jar="${libdir}/${svc_name}.jar"
-      cp -u "${jar_file}" "${jar}"
+      cp_dash_u "${jar_file}" "${jar}"
       echo "${jar}"
       ;;
   esac
