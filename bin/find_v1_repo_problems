@@ -55,6 +55,9 @@ def cpfile():
 def outfile():
     return '%s.out' % args.hostport
 
+def errfile():
+    return '%s.err' % args.hostport
+
 def write_auids(auids):
     with open(cpfile(),"w") as f:
         json.dump(auids, f)
@@ -142,9 +145,10 @@ if not auids:
 write_auids(auids)
 logging.debug('AUIDs: %s' % auids)
 
-with open(outfile(), append_or_write) as out:
+with open(outfile(), append_or_write) as out, open(errfile(), append_or_write) as err:
     while auids:
         (auid, auname) = auids.pop(0)
+        first_err = True;
         try:
             lines = get_list({'type': 'urls',
                               'auid': auid,
@@ -158,8 +162,16 @@ with open(outfile(), append_or_write) as out:
 
             prevurl = None
             for line in lines:
-    #            print(line)
-                url, realUrl, ver = line.split()
+                logging.debug('line: %s' % line)
+                try:
+                    url, realUrl, ver = line.split()
+                except ValueError:
+                    if first_err:
+                        err.write('Errors for %s\n%s\n' % (auname, auid) )
+                        first_err = False;
+                    err.write('line: %s\n' % line)
+                    err.flush()
+                    continue
 
                 if url != prevurl:
                     # if prev url had more than one variant, record it
