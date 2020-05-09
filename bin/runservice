@@ -21,7 +21,7 @@ usage() {
   echo "  -g <group>   Set polling group to <group>"
   echo "  -j           Run using fat jar instead of maven"
   echo "  -o           Invoke maven in offline mode"
-  echo "  -p <name>    Load config from http://props.lockss.org:8001/<name>/lockss.xml"
+  echo "  -p lockss:<name>  Load config from http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -p <url>     Load config from prop server <url>"
   echo "  -r <path>    Path to file with REST client credentials"
   echo "  -u <user>:<pass> REST client credentials"
