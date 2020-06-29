@@ -60,6 +60,7 @@ testing=
 repo_dirs=default
 mvn_U=
 db_props=config/derby.xml
+max_warc_size=100000000
 
 declare -A svc_map		# maps svc_name -> jar or artifact
 svc_list=()			# ordered array of svc_name
@@ -228,7 +229,7 @@ start_service() {
   local tmp_jar=`copy_jar "${svc_name}" "${jar_file}"`
   if [ -n "${tmp_jar}" ]; then
       echo "Starting ${svc_name}"
-      ( env REPO_MAX_WARC_SIZE=100000000 \
+      ( env REPO_MAX_WARC_SIZE="${max_warc_size}" \
             LOG4J_LOCKSS_CONFIG="${l4j_xml}" \
             LOCKSS_LOG_DIR="${logdir}" \
             LOCKSS_SERVICE_NAME="${svc_name}" \
@@ -306,6 +307,9 @@ while [ -n "$1" ]; do
     -derby )
       db_props=config/derby.xml
       shift; continue ;;
+    -maxwarc )
+      max_warc_size="$2"
+      shift; shift; continue ;;
     -jar )
       # copy jar to tmplib
       tmptmpjar="${libdir}/`basename $2`"
