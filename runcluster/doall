@@ -18,12 +18,17 @@ usage() {
   echo "  -c <file>    Load additional config from <file> (incl tdb .xml)"
   echo "  -x <dir>     Load config from dir/*.xml (typically used for tdb files)"
   echo "  -g <group>   Set polling group to <group>"
+  echo "  -repos <dir_list>  Semicolom-separated list of repository dirs.  the word"
+  echo "               \"default\" in the list designates the default repo dir, which"
+  echo "               is \"repo/data\""
+
   echo "  -a <app_arg> Add <app_arg> to command line"
   echo "  -r <credentials_file> Load Rest client credentials from file"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
   echo "  -U           Force maven to check for updated artifacts"
   echo "  -force       Use with \"stop\" to force hung JVMs to exit"
+  echo "  -testing     Use testing components"
 }
 
 shopt -s nullglob
@@ -51,8 +56,11 @@ l4j_xml=config/log4j2-runcluster.xml
 svcs_file="./config/services.snapshot"
 svcs_file_local="./config/services.local"
 forcekill=
+testing=
+repo_dirs=default
 mvn_U=
 db_props=config/derby.xml
+max_warc_size=100000000
 
 declare -A svc_map		# maps svc_name -> jar or artifact
 svc_list=()			# ordered array of svc_name
@@ -185,12 +193,32 @@ start_service() {
       ;;
     repo )
       # repo gets spring config file with repo type & location
+      local repo_abs_dirs=
+      local dir_array
       mkdir -p ./data/repo
-      local repo_data=`abspath ./data/repo`
+      IFS=';' read -ra dir_array <<< "${repo_dirs}"
+      for dir in "${dir_array[@]}"; do
+	if [ "${dir}" = "default" ]; then
+	    dir='./data/repo'
+	fi
+        if [ -n "${repo_abs_dirs}" ]; then
+	    repo_abs_dirs="${repo_abs_dirs};"
+        fi
+	repo_abs_dirs="${repo_abs_dirs}`abspath ${dir}`"
+      done
       touch config/repo.properties
       local repo_config=`abspath config/repo.properties`
-      echo "repo.spec=local:${repo_data}" > ${repo_config}
+      echo "repo.spec=custom" > ${repo_config}
+      if [ -n "${testing}" ]; then
+	  echo "repo.datastore.spec=testing" >> ${repo_config}
+      else
+	echo "repo.datastore.spec=local" >> ${repo_config}
+      fi
+      echo "repo.datastore.local.basedir=${repo_abs_dirs}" >> ${repo_config}
+      echo "repo.index.spec=local" >> ${repo_config}
       echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
+#       echo "repo.spec=local:${repo_data}" > ${repo_config}
+#       echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
       extra_args="--spring.config.location=file:${repo_config}"
       ;;
     * )
@@ -201,7 +229,7 @@ start_service() {
   local tmp_jar=`copy_jar "${svc_name}" "${jar_file}"`
   if [ -n "${tmp_jar}" ]; then
       echo "Starting ${svc_name}"
-      ( env REPO_MAX_WARC_SIZE=100000000 \
+      ( env REPO_MAX_WARC_SIZE="${max_warc_size}" \
             LOG4J_LOCKSS_CONFIG="${l4j_xml}" \
             LOCKSS_LOG_DIR="${logdir}" \
             LOCKSS_SERVICE_NAME="${svc_name}" \
@@ -279,6 +307,9 @@ while [ -n "$1" ]; do
     -derby )
       db_props=config/derby.xml
       shift; continue ;;
+    -maxwarc )
+      max_warc_size="$2"
+      shift; shift; continue ;;
     -jar )
       # copy jar to tmplib
       tmptmpjar="${libdir}/`basename $2`"
@@ -291,6 +322,9 @@ while [ -n "$1" ]; do
     -force )
       forcekill="-9"
       shift; continue ;;
+    -testing )
+      testing="1"
+      shift; continue ;;
     -U )
       mvn_U="-U"
       shift; continue ;;
@@ -299,6 +333,9 @@ while [ -n "$1" ]; do
       shift; shift; continue ;;
     -c )
       other_args="$other_args -l $2"
+      shift; shift; continue ;;
+    -repos )
+      repo_dirs="$2"
       shift; shift; continue ;;
     -h )
       usage
@@ -323,6 +360,14 @@ case "$verb" in
 	exit 1
     fi ;;
 esac
+
+if [ -n "${pln_props}" ]; then
+  case "${pln_props}" in
+    lockss:* )
+      pln_name=`echo "${pln_props}" | sed 's/^lockss://'`
+      pln_props="http://props.lockss.org:8001/${pln_name}/lockss.xml" ;;
+  esac
+fi
 
 temp_svcs_file=$(mktemp runcluster.XXXXX)
 
