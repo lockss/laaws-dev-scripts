@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 usage() {
   echo "Usage: $0 (start | stop) [ svc_name ... ] [-options]"
@@ -9,8 +9,8 @@ usage() {
   echo "               which runs SNAPSHOT artifacts downloaded from maven central)"
   echo "  -local       Synonym for -svcs config/services.local (which runs"
   echo "               locally built service jars)"
-  echo "  -pg          Use external PostgreSQL database (default)"
-  echo "  -derby       Use embedded Derby database"
+  echo "  -pg          Use external PostgreSQL database"
+  echo "  -derby       Use embedded Derby database (default)"
   echo "  -p lockss:<name>  Load PLN config from http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -p <url>     Load PLN config from prop server <url>"
   echo "  -p <file>    Load PLN config from <file> (default config/lockss.xml)"
@@ -145,7 +145,7 @@ copy_jar() {
       esac
       # fetch jar to libdir
       echo "Fetching ${art}" >&2
-      mvn ${mvn_U} -B dependency:copy \
+      mvn -X ${mvn_U} -B dependency:copy \
 	  -DrepoUrl=${mvn_repo} \
 	  -Dartifact=${art} \
 	  -DoutputDirectory="${libdir}" \
