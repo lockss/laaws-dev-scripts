@@ -316,6 +316,9 @@ while [ -n "$1" ]; do
       cp -u "$2" "${tmptmpjar}"
       cp_jars="${cp_jars},${tmptmpjar}"
       shift; shift; continue ;;
+    -D )
+      echo "Bare -D ignored.  Did you mean -Dprop=value?"
+      shift; continue ;;
     -D* )
       java_args="${java_args} $1"
       shift; continue ;;
