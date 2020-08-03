@@ -29,6 +29,7 @@ usage() {
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
   echo "  -U           Force maven to check for updated artifacts"
+  echo "  -X           Turn on maven debugging"
   echo "  -force       Use with \"stop\" to force hung JVMs to exit"
   echo "  -testing     Use testing components"
 }
@@ -61,6 +62,7 @@ forcekill=
 testing=
 repo_dirs=default
 mvn_U=
+mvn_X=
 db_props=config/derby.xml
 max_warc_size=100000000
 solr_baseurl=
@@ -149,12 +151,14 @@ copy_jar() {
       esac
       # fetch jar to libdir
       echo "Fetching ${art}" >&2
-      mvn -X ${mvn_U} -B dependency:copy \
-	  -DrepoUrl=${mvn_repo} \
+      mvn ${mvn_X} ${mvn_U} -B dependency:get \
+	  -DremoteRepositories=${mvn_repo} \
+	  -Dartifact=${art} \
+	  -Dtransitive=false >>logs/maven.log
+      mvn ${mvn_X} ${mvn_U} -B dependency:copy \
 	  -Dartifact=${art} \
 	  -DoutputDirectory="${libdir}" \
-	  -Dmdep.useBaseVersion \
-	  -Dtransitive=false >>logs/maven.log
+	  -Dmdep.useBaseVersion >>logs/maven.log
       if [ $? -ne 0 ]; then
 	  echo "Couldn't fetch ${art}, skipping it" >&2
 	  return
@@ -350,6 +354,9 @@ while [ -n "$1" ]; do
       shift; continue ;;
     -U )
       mvn_U="-U"
+      shift; continue ;;
+    -X )
+      mvn_X="-X"
       shift; continue ;;
     -a | -g | -r | -x )
       other_args="$other_args $1 $2"
