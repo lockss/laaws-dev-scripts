@@ -216,7 +216,10 @@ start_service() {
       done
       touch config/repo.properties
       local repo_config=`abspath config/repo.properties`
-      echo "repo.spec=custom" > ${repo_config}
+
+      echo "# THIS FILE IS GENERATED - DO NOT EDIT" > ${repo_config}
+      echo >> ${repo_config}
+      echo "repo.spec=custom" >> ${repo_config}
       if [ -n "${testing}" ]; then
 	  echo "repo.datastore.spec=testing" >> ${repo_config}
       else
@@ -344,6 +347,9 @@ while [ -n "$1" ]; do
       echo "Bare -D ignored.  Did you mean -Dprop=value?"
       shift; continue ;;
     -D* )
+      java_args="${java_args} $1"
+      shift; continue ;;
+    -Xmx* )
       java_args="${java_args} $1"
       shift; continue ;;
     -force )
