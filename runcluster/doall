@@ -181,9 +181,15 @@ copy_jar() {
 start_service() {
   local svc_name="$1"
   local name_arg="--${svc_name}--"
-  local cfgsvc_args="-c http://lockss-u:lockss-p@localhost:24620 -l http://localhost:24620/config/file/cluster"
+  local data_dir="./data/${svc_name}-files"
+  mkdir -p ${data_dir}
+  local cfgsvc_args="-c http://localhost:24620 -l http://localhost:24620/config/file/cluster"
   local local_props_args=
-  local bootstrap_args="-b resource:application.properties -b config/bootstrap.xml"
+  # credentials file is overwritten and deleted when used, so must create
+  # one for each service
+  echo -n "lockss-u:lockss-p" >"${data_dir}/lockss-auth"
+  local rest_cred_file=`abspath "${data_dir}/lockss-auth"`
+  local bootstrap_args="-b resource:application.properties -b config/bootstrap.xml -r ${rest_cred_file}"
   local extra_args=
   local jar_file="${svc_map[${svc_name}]}"
 
@@ -203,7 +209,6 @@ start_service() {
       # repo gets spring config file with repo type & location
       local repo_abs_dirs=
       local dir_array
-      mkdir -p ./data/repo
       IFS=';' read -ra dir_array <<< "${repo_dirs}"
       for dir in "${dir_array[@]}"; do
 	if [ "${dir}" = "default" ]; then

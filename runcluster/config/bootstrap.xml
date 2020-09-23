@@ -8,6 +8,8 @@
     <property name="tmpDir" value="data/temp" />
     <property name="logdirectory" value="logs" />
 
+    <property name="restAuth.authenticationType" value="basic"/>
+
     <property name="v3.identity" value="TCP:[127.0.0.1]:9720" />
 
     <if>
@@ -21,6 +23,7 @@
       <test serviceAbbrev="repo"/>
       <then>
 	<property name="diskSpacePaths" value="./data/repo-files"/>
+
       </then>
     </if>
 
