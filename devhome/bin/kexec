@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# execs a command in a named kubernetes containr
+# kexec <name> command ...
+
+name="$1"
+shift
+microk8s kubectl exec `kcid "$name"` -n lockss -- $@

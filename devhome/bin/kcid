@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# prints the fuill name of the first kubernetes pod whose name
+# contains <string>.
+
+name="$1"
+
+# aliases for the lazy
+case "$1" in
+    "cfg" )
+        name=config
+        break;;
+    "mdx" )
+        name=metadata-extract
+        break;;
+    "mdq" )
+        name=metadata-service
+        break;;
+esac
+
+microk8s kubectl get po -n lockss -oname | sed 's|pod/||' | awk "/$name/"' { print $1 ; exit 0 }'
