@@ -30,6 +30,7 @@ usage() {
   echo "  -jar <file>  Add jar <file> to the classpath"
   echo "  -U           Force maven to check for updated artifacts"
   echo "  -X           Turn on maven debugging"
+  echo "  -mvnarg <mvn_arg> Pass a command-line arg to maven"
   echo "  -force       Use with \"stop\" to force hung JVMs to exit"
   echo "  -testing     Use testing components"
 }
@@ -63,6 +64,7 @@ testing=
 repo_dirs=default
 mvn_U=
 mvn_X=
+mvn_args=
 db_props=config/derby.xml
 max_warc_size=100000000
 solr_baseurl=
@@ -122,6 +124,11 @@ read_services() {
   done < "$1"
 }
 
+# invoke maven, first logging the maven command line
+run_mvn() {
+  echo "mvn $@"
+  mvn $@
+}
 
 # Write service uber jar to temp dir, return (echo) jar name in temp dir
 # copy_jar svc_name jar-file   or
@@ -151,11 +158,12 @@ copy_jar() {
       esac
       # fetch jar to libdir
       echo "Fetching ${art}" >&2
-      mvn ${mvn_X} ${mvn_U} -B dependency:get \
+      echo >>logs/maven.log
+      run_mvn ${mvn_args} -B dependency:get \
 	  -DremoteRepositories=${mvn_repo} \
 	  -Dartifact=${art} \
 	  -Dtransitive=false >>logs/maven.log
-      mvn ${mvn_X} ${mvn_U} -B dependency:copy \
+      run_mvn ${mvn_args} -B dependency:copy \
 	  -Dartifact=${art} \
 	  -DoutputDirectory="${libdir}" \
 	  -Dmdep.useBaseVersion >>logs/maven.log
@@ -364,11 +372,15 @@ while [ -n "$1" ]; do
       testing="1"
       shift; continue ;;
     -U )
-      mvn_U="-U"
+      mvn_args="${mvn_args} -U"
       shift; continue ;;
     -X )
-      mvn_X="-X"
+      mvn_args="${mvn_args} -X"
+      mvn_debug=1
       shift; continue ;;
+    -mvnarg )
+      mvn_args="${mvn_args} $2"
+      shift; shift; continue ;;
     -a | -g | -r | -x )
       other_args="$other_args $1 $2"
       shift; shift; continue ;;
