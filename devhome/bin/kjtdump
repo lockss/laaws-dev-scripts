@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# prints a java thread dump from the named container
+
+kexec "$1" jcmd 1 Thread.print
