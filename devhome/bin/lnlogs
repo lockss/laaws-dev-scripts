@@ -1,0 +1,6 @@
+# Run with no args, makes convenience symlinks:
+# /lockss/<srv>.log -> /lockss/lockss-stack-<srv>-logs/daemon.log
+# /lockss/<srv>-std.log -> /lockss/lockss-stack-<srv>-logs/stdlog.log
+
+for x in /lockss/*/daemon.log; do ln -s "$x" `dirname "$x" | sed -e s/lockss-stack-// -e s/-logs/.log/`; done
+for x in /lockss/*/stdout.log; do ln -s "$x" `dirname "$x" | sed -e s/lockss-stack-// -e s/-logs/-std.log/`; done

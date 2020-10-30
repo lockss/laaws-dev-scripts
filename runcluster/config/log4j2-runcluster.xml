@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Properties>
+
+    <!-- log to logs/<svc-name>.log -->
+    <!-- doall sets these env vars -->
+    <Property name="log.dir">$${env:LOCKSS_LOG_DIR}</Property>
+    <Property name="log.file">$${env:LOCKSS_SERVICE_NAME:-daemon}</Property>
+
+    <!-- roll over at 10MB, keep five old versions -->
+    <Property name="log.rollingfile.sizetrigger">10 MB</Property>
+    <Property name="log.rollingfile.maxrollover">5</Property>
+
+    <!-- log only FATAL messages to console -->
+    <Property name="level.min.console">FATAL</Property>
+
+  </Properties>
+</Configuration>

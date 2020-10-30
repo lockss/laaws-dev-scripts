@@ -26,3 +26,10 @@ local.properties
 *~
 \#*
 .#*
+runcluster/data
+runcluster/logs
+runcluster/pids
+runcluster/tmplib
+runcluster/config/repo.properties
+runcluster/config/cluster.opt
+runcluster/derby.log

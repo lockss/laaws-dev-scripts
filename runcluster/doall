@@ -1,0 +1,466 @@
+#!/usr/bin/env bash
+
+usage() {
+  echo "Usage: $0 (start | stop) [ svc_name ... ] [-options]"
+  echo "  Starts or stops a set of LOCKSS services, either those named on the"
+  echo "  command line or the entire set defined in config/services.xxx"
+  echo "Options:"
+  echo "  -svcs <file> Use alternate services file (default config/services.snapshot,"
+  echo "               which runs SNAPSHOT artifacts downloaded from maven central)"
+  echo "  -local       Synonym for -svcs config/services.local (which runs"
+  echo "               locally built service jars)"
+  echo "  -pg          Use external PostgreSQL database"
+  echo "  -derby       Use embedded Derby database (default)"
+  echo "  -solr <url>  Use external Solr running at the provided base URL"
+  echo "  -solrCollection <name>  Solr collection name to use (default lockss)"
+  echo "  -p lockss:<name>  Load PLN config from http://props.lockss.org:8001/<name>/lockss.xml"
+  echo "  -p <url>     Load PLN config from prop server <url>"
+  echo "  -p <file>    Load PLN config from <file> (default config/lockss.xml)"
+  echo "  -cluster <file>  Load cluster config from <file> (default config/cluster.xml)"
+  echo "  -c <file>    Load additional config from <file> (incl tdb .xml)"
+  echo "  -x <dir>     Load config from dir/*.xml (typically used for tdb files)"
+  echo "  -g <group>   Set polling group to <group>"
+  echo "  -repos <dir_list>  Semicolom-separated list of repository dirs.  the word"
+  echo "               \"default\" in the list designates the default repo dir, which"
+  echo "               is \"repo/data\""
+
+  echo "  -a <app_arg> Add <app_arg> to command line"
+  echo "  -r <credentials_file> Load Rest client credentials from file"
+  echo "  -Dprop=val   Set System property"
+  echo "  -jar <file>  Add jar <file> to the classpath"
+  echo "  -U           Force maven to check for updated artifacts"
+  echo "  -X           Turn on maven debugging"
+  echo "  -mvnarg <mvn_arg> Pass a command-line arg to maven"
+  echo "  -force       Use with \"stop\" to force hung JVMs to exit"
+  echo "  -testing     Use testing components"
+}
+
+shopt -s nullglob
+
+verb="$1"
+shift
+
+case "$verb" in
+  start | stop ) ;;
+  * )
+    echo "first arg must be start or stop"
+    exit 1
+esac
+
+# dirs
+logdir=logs
+piddir=pids
+libdir=tmplib
+
+mkdir -p "${logdir}" "${piddir}" "${libdir}" ./data
+
+l4j_xml=config/log4j2-runcluster.xml
+
+# defaults
+svcs_file="./config/services.snapshot"
+svcs_file_local="./config/services.local"
+forcekill=
+testing=
+repo_dirs=default
+mvn_U=
+mvn_X=
+mvn_args=
+db_props=config/derby.xml
+max_warc_size=100000000
+solr_baseurl=
+solr_collection="lockss"
+
+declare -A svc_map		# maps svc_name -> jar or artifact
+svc_list=()			# ordered array of svc_name
+
+cp_jars=lib			# jars to put on classpath.  "lib" is
+				# required for uber jar
+pln_props="config/lockss.xml"
+cluster_props="config/cluster.xml config/cluster.opt"
+other_props=
+java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
+
+### Functions ###
+
+# copy file iff destination doesn't exist or is older than source
+# similar to cp -u, which MacOS's native cp doesn't support
+cp_dash_u() {
+  if [ ! -e "$1" ]; then
+    echo "cp: No such file: $1" >&2
+    return 1
+  fi
+  if [ ! -e "$2" -o "$1" -nt "$2" ]; then
+    cp "$1" "$2"
+  fi
+}
+
+# preface_each space_separated_string prefix
+preface_each() {
+  local words=`trim "$1"`
+  if [ -z "$words" ]; then
+      return
+  fi
+  echo `echo " " $words | sed 's/  */ '"$2"' /g'`
+}
+
+# trim leading and trailing blanks
+trim() {
+  echo `echo $1 | sed -e 's/^ *//' -e 's/ *$//'`
+}
+
+# return absolute path of $1
+abspath() {                                               
+  ( cd "$(dirname "$1")"
+    printf "%s/%s\n" "$(pwd)" "$(basename "$1")" )
+}
+
+# load svc_map and svc_list from services file
+read_services() {
+  while IFS='=' read name path; do
+    if [ -n "${name}" ]; then
+	svc_map[${name}]=${path}
+	svc_list+=( ${name} )
+    fi
+  done < "$1"
+}
+
+# invoke maven, first logging the maven command line
+run_mvn() {
+  echo "mvn $@"
+  mvn $@
+}
+
+# Write service uber jar to temp dir, return (echo) jar name in temp dir
+# copy_jar svc_name jar-file   or
+# copy_jar svc_name mvn:groupid:artifactid:version
+copy_jar() {
+  case "$2" in
+    "" )
+      echo "No service definition found for $1" >&2
+      return
+      ;;
+    mvn:* )
+      # mvn:artifact - strip "mvn:"
+      local art=${2#mvn:}
+      # append :jar:with-deps if necessary
+      case "${art}" in
+	*:jar:with-deps ) ;;
+	* ) art="${art}:jar:with-deps" ;;
+      esac
+      # select appropriate maven repo
+      case "${art}" in
+	*SNAPSHOT* )
+	  mvn_repo="https://oss.sonatype.org/content/repositories/snapshots"
+	  ;;
+	* )
+	  mvn_repo="https://mvnrepository.com/artifact/"
+	  ;;
+      esac
+      # fetch jar to libdir
+      echo "Fetching ${art}" >&2
+      echo >>logs/maven.log
+      run_mvn ${mvn_args} -B dependency:get \
+	  -DremoteRepositories=${mvn_repo} \
+	  -Dartifact=${art} \
+	  -Dtransitive=false >>logs/maven.log
+      run_mvn ${mvn_args} -B dependency:copy \
+	  -Dartifact=${art} \
+	  -DoutputDirectory="${libdir}" \
+	  -Dmdep.useBaseVersion >>logs/maven.log
+      if [ $? -ne 0 ]; then
+	  echo "Couldn't fetch ${art}, skipping it" >&2
+	  return
+      fi
+      # construct jar file name from artifact and return it
+      local jar=`echo "${art}" | sed -E 's/[^:]+:([^:]+):([^:]+):?.*/\1-\2-with-deps.jar/'`
+      echo "${libdir}/${jar}"
+      ;;
+    * )
+      # copy jar to libdir, return name
+      local jar="${libdir}/${svc_name}.jar"
+      cp_dash_u "${jar_file}" "${jar}"
+      echo "${jar}"
+      ;;
+  esac
+}
+
+# start a service
+# start_service <name> <jar-file>
+start_service() {
+  local svc_name="$1"
+  local name_arg="--${svc_name}--"
+  local data_dir="./data/${svc_name}-files"
+  mkdir -p ${data_dir}
+  local cfgsvc_args="-c http://localhost:24620 -l http://localhost:24620/config/file/cluster"
+  local local_props_args=
+  # credentials file is overwritten and deleted when used, so must create
+  # one for each service
+  echo -n "lockss-u:lockss-p" >"${data_dir}/lockss-auth"
+  local rest_cred_file=`abspath "${data_dir}/lockss-auth"`
+  local bootstrap_args="-b resource:application.properties -b config/bootstrap.xml -r ${rest_cred_file}"
+  local extra_args=
+  local jar_file="${svc_map[${svc_name}]}"
+
+  local pid_file="${piddir}/${svc_name}.pid"
+  if [ -f "${pid_file}" ]; then
+      echo "${svc_name} already running"
+      return 1
+  fi
+  case "${svc_name}" in
+    cfg )
+      # cfgsvc loads main config files, does not load from cfgsvc
+      local_props_args=`preface_each "${pln_props} ${cluster_props} ${db_props}" -l`
+#      local_props_args="-l ${pln_props} -l ${cluster_props}"
+      cfgsvc_args=
+      ;;
+    repo )
+      # repo gets spring config file with repo type & location
+      local repo_abs_dirs=
+      local dir_array
+      IFS=';' read -ra dir_array <<< "${repo_dirs}"
+      for dir in "${dir_array[@]}"; do
+	if [ "${dir}" = "default" ]; then
+	    dir='./data/repo'
+	fi
+        if [ -n "${repo_abs_dirs}" ]; then
+	    repo_abs_dirs="${repo_abs_dirs};"
+        fi
+	repo_abs_dirs="${repo_abs_dirs}`abspath ${dir}`"
+      done
+      touch config/repo.properties
+      local repo_config=`abspath config/repo.properties`
+
+      echo "# THIS FILE IS GENERATED - DO NOT EDIT" > ${repo_config}
+      echo >> ${repo_config}
+      echo "repo.spec=custom" >> ${repo_config}
+      if [ -n "${testing}" ]; then
+	  echo "repo.datastore.spec=testing" >> ${repo_config}
+      else
+	echo "repo.datastore.spec=local" >> ${repo_config}
+      fi
+      echo "repo.datastore.local.basedir=${repo_abs_dirs}" >> ${repo_config}
+
+      if [ -n "${solr_baseurl}" ]; then
+        # Yes: Use external Solr
+        echo "repo.index.spec=solr" >> ${repo_config}
+        echo "repo.index.solr.solrUrl=${solr_baseurl}" >> ${repo_config}
+        echo "repo.index.solr.solrCollection=${solr_collection}" >> ${repo_config}
+      else
+        # No: Use locally persisted index
+        echo "repo.index.spec=local" >> ${repo_config}
+        echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
+      fi
+
+#       echo "repo.spec=local:${repo_data}" > ${repo_config}
+#       echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
+      extra_args="--spring.config.location=file:${repo_config}"
+      ;;
+    * )
+      : ;;
+  esac
+
+  local std_file="${logdir}/${svc_name}.std"
+  local tmp_jar=`copy_jar "${svc_name}" "${jar_file}"`
+  if [ -n "${tmp_jar}" ]; then
+      echo "Starting ${svc_name}"
+      ( env REPO_MAX_WARC_SIZE="${max_warc_size}" \
+            LOG4J_LOCKSS_CONFIG="${l4j_xml}" \
+            LOCKSS_LOG_DIR="${logdir}" \
+            LOCKSS_SERVICE_NAME="${svc_name}" \
+	    java ${java_args} "-Dloader.path=${cp_jars}" -jar ${tmp_jar} ${name_arg} ${bootstrap_args} ${cfgsvc_args} ${local_props_args} ${other_args} ${extra_args} > ${std_file} 2>&1 &
+	pid=$!
+	if [ -n "${pid_file}" ]; then
+	    echo ${pid} > ${pid_file}
+	fi
+	wait ${pid}
+	status=$?
+	if [ -n "${pid_file}" ]; then
+	    rm -f ${pid_file}
+	fi
+	echo "${svc_name} stopped with status ${status} at `date`" >&2
+	exit 0 ) &
+  fi
+}
+
+# stop a service
+stop_service() {
+  local svc_name="$1"
+  local pid_file="${piddir}/${svc_name}.pid"
+  if [ -f ${pid_file} ] ; then
+      local pid="`cat ${pid_file}`"
+      if [ -n "${pid}" ] ; then
+	  if kill -s 0 "${pid}" ; then
+	      echo "stopping ${svc_name}"
+	      kill $forcekill `cat ${pid_file}`
+	  else
+	    echo "${svc_name} not running, deleting stale pid file"
+	    rm -f "${pid_file}"
+	  fi
+      else
+	echo "${svc_name} not running, deleting empty pid file"
+	rm -f "${pid_file}"
+      fi
+  else
+    echo "${svc_name} not running"
+  fi
+}
+
+cleanup() {
+  /bin/rm -f $temp_svcs_file
+}
+
+### Main ###
+
+# process service name args, if any
+svc_names=
+while [ -n "$1" ]; do
+  case "$1" in
+    -* ) break ;;
+    * ) svc_names="${svc_names} $1"
+	shift; continue ;;
+  esac
+done
+
+while [ -n "$1" ]; do
+  case "$1" in
+    "-svcs" )
+      svcs_file="$2"
+      shift; shift; continue ;;
+    "-local" )
+      svcs_file="${svcs_file_local}"
+      shift; continue ;;
+    "-p" )
+      pln_props="$2"
+      shift; shift; continue ;;
+    -cluster )
+      cluster_props="$2"
+      shift; shift; continue ;;
+    -pg | -postgres )
+      db_props=config/postgres.xml
+      shift; continue ;;
+    -derby )
+      db_props=config/derby.xml
+      shift; continue ;;
+    -solr )
+      solr_baseurl="$2"
+      shift; shift; continue ;;
+    -solrCollection )
+      solr_collection="$2"
+      shift; shift; continue ;;
+    -maxwarc )
+      max_warc_size="$2"
+      shift; shift; continue ;;
+    -jar )
+      # copy jar to tmplib
+      tmptmpjar="${libdir}/`basename $2`"
+      cp -u "$2" "${tmptmpjar}"
+      cp_jars="${cp_jars},${tmptmpjar}"
+      shift; shift; continue ;;
+    -D )
+      echo "Bare -D ignored.  Did you mean -Dprop=value?"
+      shift; continue ;;
+    -D* )
+      java_args="${java_args} $1"
+      shift; continue ;;
+    -Xmx* )
+      java_args="${java_args} $1"
+      shift; continue ;;
+    -force )
+      forcekill="-9"
+      shift; continue ;;
+    -testing )
+      testing="1"
+      shift; continue ;;
+    -U )
+      mvn_args="${mvn_args} -U"
+      shift; continue ;;
+    -X )
+      mvn_args="${mvn_args} -X"
+      mvn_debug=1
+      shift; continue ;;
+    -mvnarg )
+      mvn_args="${mvn_args} $2"
+      shift; shift; continue ;;
+    -a | -g | -r | -x )
+      other_args="$other_args $1 $2"
+      shift; shift; continue ;;
+    -c )
+      other_args="$other_args -l $2"
+      shift; shift; continue ;;
+    -repos )
+      repo_dirs="$2"
+      shift; shift; continue ;;
+    -h )
+      usage
+      exit 0 ;;
+    -* )
+      other_args="$other_args $1"
+      shift; continue ;;
+    * )
+      echo "Unknown option: $1"
+      exit 1 ;;
+  esac
+  break;
+done
+
+case "$verb" in
+  "clean" )
+    echo "clean not yet implemented"
+    exit 1 ;;
+  "start" )
+    if [ -z "${pln_props}" ]; then
+	echo "-p is required"
+	exit 1
+    fi ;;
+esac
+
+if [ -n "${pln_props}" ]; then
+  case "${pln_props}" in
+    lockss:* )
+      pln_name=`echo "${pln_props}" | sed 's/^lockss://'`
+      pln_props="http://props.lockss.org:8001/${pln_name}/lockss.xml" ;;
+  esac
+fi
+
+temp_svcs_file=$(mktemp runcluster.XXXXX)
+
+# Clean up if script is interrupted or terminated.
+trap "cleanup" SIGINT SIGTERM 1 0
+
+
+sed '/^[[:blank:]]*#/d;s/#.*//' "$svcs_file" > ${temp_svcs_file}
+read_services ${temp_svcs_file}
+
+if [ -n "${svc_names}" ]; then
+    # use explicit list of services
+    svc_list=()
+    for name in ${svc_names}; do
+      svc_list+=( ${name} )
+    done
+else
+  case "$verb" in
+    "start" )
+      # use list from services file (svc_list already set by read_services)
+      ;;
+    "stop" )
+      # use list of running services (pids/*.pid)
+      svc_list=()
+      for pidfile in ${piddir}/*.pid; do
+	svc_list+=( $(basename -s .pid "$pidfile") )
+      done
+      ;;
+  esac
+fi
+
+#  set -x
+
+for name in ${svc_list[@]}; do
+  case "$verb" in
+    "start" )
+      start_service "${name}"
+      continue ;;
+    "stop" )
+      stop_service "$name"
+      continue ;;
+  esac
+done

@@ -1,0 +1,13 @@
+# List of services to run.  Each line is <name>=<service-jar>, where <name>
+# is one of cfg, repo, poller, mdx, mdq, and <service-jar> is either a path
+# to the corresponding uber jar (absolute or relative to the
+# laaws-dev-scripts/runcluster directory), or mvn:<artifact>, where
+# <artifact> is groupId:artifactId:version .  In the latter case mvn will
+# be invoked to obtain the jar.
+
+repo=mvn:org.lockss.laaws:laaws-repository-service:2.0.11.0-SNAPSHOT
+cfg=mvn:org.lockss.laaws:laaws-configuration-service:2.0.5.0-SNAPSHOT
+poller=mvn:org.lockss.laaws:laaws-poller:2.0.3.0-SNAPSHOT
+#mdx=mvn:org.lockss.laaws:laaws-metadata-extraction-service:2.0.4.0-SNAPSHOT
+#mdq=mvn:org.lockss.laaws:laaws-metadata-service:2.0.3.0-SNAPSHOT
+#soap=mvn:org.lockss.laaws:laaws-soap-service:1.1.0-SNAPSHOT

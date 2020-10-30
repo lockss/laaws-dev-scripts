@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Cluster-wide config -->
+
+<lockss-config>
+
+  <property name="org.lockss">
+
+    <property name="plugin.keystore.location"
+	      value="org/lockss/plugin/lockss-testing.keystore"/>
+
+    <property name="platform.ui.username" value="lockss-u"/>
+    <property name="platform.ui.password" value="SHA1:ac4fc8fa9930a24c8d002d541c37ca993e1bc40f"/>    <!-- lockss-p -->
+
+    <property name="daemon.pluginsCrawler" value="cfg"/>
+
+    <property name="ui.start" value="true" />
+
+    <property name="metadataManager.mandatoryFields"
+	      value="publisher;provider"/>
+    <property name="metadataManager.indexing_enabled" value="true"/>
+
+    <if>
+      <test serviceAbbrev="cfg"/>
+      <then>
+	<!-- cfg crawls plugin registries -->
+	<property name="crawler.enabled" value="true"/>
+	<property name="daemon.crawlMode" value="Plugins"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="repo"/>
+      <then>
+	<property name="ui.start" value="false" />
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="poller"/>
+      <then>
+	<!-- poller crawls other AUs -->
+	<property name="crawler.enabled" value="true"/>
+	<property name="daemon.crawlMode" value="NonPlugins"/>
+	<property name="poll.v3.enableV3Poller" value="true"/>
+	<property name="poll.v3.enableV3Voter" value="true"/>
+	<property name="scomm.enabled" value="true"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="mdx"/>
+      <then>
+	<property name="jobManager.enabled" value="true"/>
+
+      </then>
+    </if>
+
+    <!-- Enable config-changed notifications -->
+    <property name="jms.broker.uri" value="tcp://localhost:61616"/>
+    <property name="jms.connect.failover" value="true"/>
+    <property name="config.enableJmsNotifications" value="true"/>
+
+    <!-- Enable AuEvent propagation -->
+    <property name="plugin.jms.enable" value="true"/>
+
+    <!-- Clients connect to this repository -->
+    <property name="repository.v2Repository"
+	      value="rest:lockss:http://localhost:24610"/>
+
+    <!-- Default bindings of service to UI port in dev environment -->
+    <property name="app.serviceBindings">
+      <list>
+        <value>repo=:24610</value>     <!--repo has no UI port-->
+        <value>cfg=:24620:24621</value>
+        <value>poller=:24630:24631</value>
+        <value>crawler=:24630:24631</value>
+        <value>mdx=:24640:24641</value>
+        <value>mdq=:24650:24651</value>
+      </list>
+    </property>
+
+    <!-- Try to get a thread dump if a thread hangs -->
+    <property name="thread.hungThreadDump" value="true"/>
+
+  </property>
+
+  <!-- End org.lockss -->
+</lockss-config>

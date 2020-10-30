@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Usage: fix_lockss_daemon_patch <file>
+# Updates file in-place
+
 # fix paths in a patch file generated from lockss-daemon source tree (src/
 # and test/src/) so it can be applied to a maven project (src/main/java/
 # and src/test/java/)
