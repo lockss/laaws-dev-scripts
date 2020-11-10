@@ -61,20 +61,21 @@ fi
 # Notify Tortoise of any failures
 if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 
-	if [ -d ${TMPROOT}/lockss-daemon/test/results -a -f ${TMPROOT}/lockss-daemon/test/results/*.txt ]; then
+	# Test whether there are any unit test result logs
+	if [ -n "$(find {$TMPROOT}/lockss-daemon/test/results -maxdepth 1 -type f -iname '*.txt' 2> /dev/null)" ]; then
 
-		# YES: Ant reached the unit tests; determine which failed and attach its log to the email
+		# YES: Determine which unit test failed and attach its log to the email
 		( cd ${TMPROOT}/lockss-daemon/test/results;
 		  echo "`date`: LOCKSS daemon build failure on `hostname` in ${TMPROOT}:";
-		  for A in `grep -L "Failures: 0" *.txt` `grep -L "Errors: 0" *.txt`; do
-                    echo;
-		    echo "${A}:";
-#		    cat ${A};
-		    tr -d '\015' < ${A};
-                    echo;
+		  for A in `grep -L -E "(Failures|Errors): 0" *.txt`; do
+			echo;
+			echo "${A}:";
+			# cat ${A};
+			tr -d '\015' < ${A};
+			echo;
 		  done;
-		  echo 
-                ) | mailx -s "LOCKSS nightly build failure (ant test-all)" ${EMAIL}
+		  echo; 
+		) | mailx -s "LOCKSS nightly build failure (ant test-all)" ${EMAIL}
 
 	else
 
@@ -85,7 +86,7 @@ if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 		  echo;
 		  cat ${LOGFILE};
 		  echo 
-                ) | mailx -s "LOCKSS nightly build failure: test-all" ${EMAIL}
+		) | mailx -s "LOCKSS nightly build failure: test-all" ${EMAIL}
 
 	fi
 
