@@ -61,7 +61,7 @@ fi
 # Notify Tortoise of any failures
 if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 
-	if [ -d ${TMPROOT}/lockss-daemon/test/results ]; then
+	if [ -d ${TMPROOT}/lockss-daemon/test/results -a -f ${TMPROOT}/lockss-daemon/test/results/*.txt ]; then
 
 		# YES: Ant reached the unit tests; determine which failed and attach its log to the email
 		( cd ${TMPROOT}/lockss-daemon/test/results;
