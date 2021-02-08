@@ -59,7 +59,6 @@
     <!-- Enable config-changed notifications -->
     <property name="jms.broker.uri" value="tcp://localhost:61616"/>
     <property name="jms.connect.failover" value="true"/>
-    <property name="config.enableJmsNotifications" value="true"/>
 
     <!-- Enable AuEvent propagation -->
     <property name="plugin.jms.enable" value="true"/>
