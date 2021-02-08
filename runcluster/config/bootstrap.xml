@@ -3,14 +3,14 @@
 <!-- Params that need to be set early, in platform config -->
 
 <lockss-config>
+  <property name="org.lockss.restAuth.authenticationType" value="basic"/>
+
   <property name="org.lockss.platform">
 
     <property name="tmpDir" value="data/temp" />
     <property name="logdirectory" value="logs" />
 
-    <property name="restAuth.authenticationType" value="basic"/>
-
-    <property name="v3.identity" value="TCP:[127.0.0.1]:9720" />
+    <property name="v3.identity" value="TCP:[127.0.0.1]:9729" />
 
     <if>
       <test serviceAbbrev="cfg"/>
