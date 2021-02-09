@@ -1,8 +1,29 @@
 #!/bin/sh
 
-# execs a command in a named kubernetes containr
-# kexec <name> command ...
+# execs a command in a named kubernetes container
+# kexec [<options>] <name> command ...
+#   Options:
+#     -n <namespace>      default to "lockss"
+#     -i                  start command interactively, with a tty
+
+namespace="lockss"
+interactive=""
+
+while [ -n "$1" ]; do
+  case "$1" in
+    "-n" )
+      namespace="$2"
+      shift; shift; continue ;;
+    "-i" )
+      interactive="--stdin --tty"
+      shift; continue ;;
+    * )
+      break
+      ;;
+  esac
+done
+
 
 name="$1"
 shift
-microk8s kubectl exec `kcid "$name"` -n lockss -- $@
+microk8s kubectl exec ${interactive} `kcid -n "${namespace}" "${name}"` -n "${namespace}" -- $@

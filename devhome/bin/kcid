@@ -1,7 +1,28 @@
 #!/bin/sh
 
-# prints the fuill name of the first kubernetes pod whose name
+# prints the full name of the first kubernetes pod whose name
 # contains <string>.
+# kcid [<options>] <name>
+#   Options:
+#     -n <namespace>      default to "lockss"
+
+
+namespace="lockss"
+
+while [ -n "$1" ]; do
+  case "$1" in
+    "-n" )
+      namespace="$2"
+      shift; shift; continue ;;
+    -* )
+      echo "Invalid option: $1"
+      exit 1
+      ;;
+    * )
+      break
+      ;;
+  esac
+done
 
 name="$1"
 
@@ -18,4 +39,4 @@ case "$1" in
         break;;
 esac
 
-microk8s kubectl get po -n lockss -oname | sed 's|pod/||' | awk "/$name/"' { print $1 ; exit 0 }'
+microk8s kubectl get po -n "${namespace}" -oname | sed 's|pod/||' | awk "/$name/"' { print $1 ; exit 0 }'
