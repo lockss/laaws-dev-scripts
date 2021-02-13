@@ -4,6 +4,12 @@ usage() {
   echo "Usage: $0 (start | stop) [ svc_name ... ] [-options]"
   echo "  Starts or stops a set of LOCKSS services, either those named on the"
   echo "  command line or the entire set defined in config/services.xxx"
+  echo
+  echo "To run a standalone LOCKSS instance, ./start should suffice."
+  echo "To run as part of a LOCKSS network, follow the directions in"
+  echo "config/identity-template.xml and start with"
+  echo "  ./start -id <your_identity_file>"
+  echo
   echo "Options:"
   echo "  -svcs <file> Use alternate services file (default config/services.snapshot,"
   echo "               which runs SNAPSHOT artifacts downloaded from maven central)"
@@ -13,7 +19,10 @@ usage() {
   echo "  -derby       Use embedded Derby database (default)"
   echo "  -solr <url>  Use external Solr running at the provided base URL"
   echo "  -solrCollection <name>  Solr collection name to use (default lockss)"
-  echo "  -p lockss:<name>  Load PLN config from http://props.lockss.org:8001/<name>/lockss.xml"
+  echo "  -id <file>   Load identity config from <file>"
+  echo "               (default config/identity-standalone.xml)"
+  echo "  -p lockss:<name>  Load PLN config from"
+  echo "               http://props.lockss.org:8001/<name>/lockss.xml"
   echo "  -p <url>     Load PLN config from prop server <url>"
   echo "  -p <file>    Load PLN config from <file> (default config/lockss.xml)"
   echo "  -cluster <file>  Load cluster config from <file> (default config/cluster.xml)"
@@ -77,6 +86,9 @@ cp_jars=lib			# jars to put on classpath.  "lib" is
 				# required for uber jar
 pln_props="config/lockss.xml"
 cluster_props="config/cluster.xml config/cluster.opt"
+identity_props="config/identity-standalone.xml"
+bootstrap_props="resource:application.properties config/bootstrap.xml"
+
 other_props=
 java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
 
@@ -197,7 +209,10 @@ start_service() {
   # one for each service
   echo -n "lockss-u:lockss-p" >"${data_dir}/lockss-auth"
   local rest_cred_file=`abspath "${data_dir}/lockss-auth"`
-  local bootstrap_args="-b resource:application.properties -b config/bootstrap.xml -r ${rest_cred_file}"
+
+  local bootstrap_files=`preface_each "${identity_props} ${bootstrap_props}" -p`
+  local bootstrap_args="${bootstrap_files} -r ${rest_cred_file}"
+
   local extra_args=
   local jar_file="${svc_map[${svc_name}]}"
 
@@ -334,6 +349,9 @@ while [ -n "$1" ]; do
       shift; shift; continue ;;
     -cluster )
       cluster_props="$2"
+      shift; shift; continue ;;
+    -id )
+      identity_props="$2"
       shift; shift; continue ;;
     -pg | -postgres )
       db_props=config/postgres.xml

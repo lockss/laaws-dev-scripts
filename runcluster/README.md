@@ -57,6 +57,16 @@ level of `MyClass` to debug3:
 
     org.lockss.log.MyClass.level=debug3
 
+## Version 5 Changes
+
+*   Added support to run as part of a LOCKSS network, by using -id <file>
+    to load a custom config file with real identity information.  See the
+    reuncluster help (./start -h) and the comments in
+    config/identity-template.xml
+
+*   Version numbering changed to integral, for uninteresting technical
+    reasons.
+
 ## Version 1.4 Changes
 
 *   Derby is supported, and is the default.  Use `-pg` for PostgreSQL.

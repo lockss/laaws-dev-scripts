@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This is the default identity config, suitable to run standalone -->
+
+<lockss-config>
+
+  <property name="org.lockss.platform">
+
+    <!-- Identity and network details -->
+    <property name="v3.identity" value="TCP:[127.0.0.1]:9729" />
+    <property name="localIPAddress" value="127.0.0.1" />
+    <property name="fqdn" value="localhost" />
+
+  </property>
+</lockss-config>
