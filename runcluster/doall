@@ -8,7 +8,7 @@ usage() {
   echo "To run a standalone LOCKSS instance, ./start should suffice."
   echo "To run as part of a LOCKSS network, follow the directions in"
   echo "config/identity-template.xml and start with"
-  echo "  ./start -id <your_identity_file>"
+  echo "  ./start -id <your_identity_file> -p <pln's_lockss.xml_url>"
   echo
   echo "Options:"
   echo "  -svcs <file> Use alternate services file (default config/services.snapshot,"

@@ -2,38 +2,40 @@
 
 <!-- Template for a real identity file, enabling the runcluster instance to
      participate (run polls with other hosts) in a LOCKSS network.  Copy
-     this to a file of your choice, edit as outlined below, and pass to
-     runcluster with ./start -id <file> ... -->
+     this to a file of your choice, edit the parameters marked with ***
+     as outlined below, and pass to runcluster with ./start -id <file> ...
+     -->
 
-<!-- Do not edit -->
+<!-- Do not edit. -->
 <lockss-config>
 
   <!-- Identity and network details. -->
 
-  <!-- The preservation group name of the network in which to participate.
-       This should be the same as the value provided to the "Preservation
-       group(s)" prompt when running the configure-lockss script on hosts
-       in the that network. -->
+  <!-- *** Change this to the preservation group name of the network in
+       which to participate.  This should be the same as the value provided
+       to the "Preservation group(s)" prompt when running the
+       configure-lockss script on hosts in that network. -->
   <property name="org.lockss.daemon.groups" value="preservaton_group" />
 
   <!-- Do not edit. -->
   <property name="org.lockss.platform">
 
-    <!-- The IP address within brackets should be the externally-reachable
-         IP address of your machine.  Normally that's the actual IP address
-         of the machine.  If behind NAT, it's probably the external IP of
-         the NAT router (which must have been configured to forward port
-         9729).  The port number can be changed from 9729 if desired. -->
+    <!-- *** Change the IP address within brackets to the
+         externally-reachable IP address of your machine.  Normally that's
+         the actual IP address of the machine.  If behind NAT, it's
+         probably the external IP of the NAT router (which must have been
+         configured to forward port 9729).  The port number can be changed
+         from 9729 if desired. -->
     <property name="v3.identity" value="TCP:[1.2.3.4]:9729" />
 
-    <!-- This should be the actual IP address of the machine. -->
+    <!-- *** Change this to the actual IP address of the machine. -->
     <property name="localIPAddress" value="1.2.3.4" />
 
-    <!-- This should be the machine's fully qualified domain name. -->
+    <!-- *** Change this to the machine's fully qualified domain name. -->
     <property name="fqdn" value="your.host.tld" />
 
-    <!-- If you'd like this LOCKSS instance to be able to send mail, set
-         this to the name of a suitable mail relay. -->
+    <!-- *** If you'd like this LOCKSS instance to be able to send mail,
+         Change this to the name of a suitable mail relay. -->
     <property name="smtphost" value="mail.relay.tld" />
 
   <!-- Do not edit. -->
