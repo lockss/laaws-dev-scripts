@@ -1,0 +1,78 @@
+#!/bin/sh
+
+stdout="rpt-test-out"
+stderr="rpt-test-err"
+
+usage() {
+ echo "Usage: $0 [-q] [-Dprop=val] <rpt-count> <class-name>"
+ echo "Runs <class-name> in junit <rpt-count> times,"
+ echo " sending stdout and stderr to $stdout and $stderr."
+ echo "-q  suppresses printing a dot for each iteration."
+ echo "Other -flags are passed in to the jvm unmodified."
+ echo "Must be run from project base dir."
+ exit 1
+}
+
+if [ "$#" = "0" ]; then
+  usage;
+fi
+
+showdots=1
+
+while true ; do
+  case "$1" in
+    "-q" )
+      showdots=0
+      shift; continue;;
+    "-1.8" )
+      if [ -z "$JAVA_18_HOME" ] ; then
+	echo "-1.8 option requires JAVA_18_HOME to point to 1.8 install dir"
+	exit 1;
+      fi
+      JAVA_HOME="${JAVA_18_HOME}"
+      export JAVA_HOME
+      PATH="$JAVA_HOME/bin:$PATH"
+      export PATH
+      echo JAVA_HOME="$JAVA_HOME"
+      shift; continue;;
+    -* )
+      if [ -z "$jvmargs" ] ; then
+	jvmargs="$1"
+      else
+	jvmargs="$jvmargs $1"
+      fi
+      shift; continue;;
+  esac
+  break;
+done
+
+[ "$#" -ne "2" ] && usage
+
+PROJECT_DIR=.
+
+rpt=$1
+class=$2
+shift
+shift
+
+failcnt=0
+
+msg="Starting $rpt iterations at `date`"
+echo "$msg" >> $stderr
+echo "$msg" >> $stdout
+
+ix=1
+while [ $ix -le $rpt ]; do
+  echo "** iter $ix" >> $stderr
+  echo "** iter $ix" >> $stdout
+
+  if ! mvn test -Dtest=$class >>$stdout 2>>$stderr; then
+    failcnt=$((failcnt + 1))
+    [ $showdots = 1 ] && echo -n F
+  else
+    [ $showdots = 1 ] && echo -n .
+  fi
+  ix=$(($ix + 1))
+done
+echo
+echo $failcnt failures

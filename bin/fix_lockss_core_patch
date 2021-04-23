@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Usage: fix_lockss_core_patch <file>
+# Updates file in-place
+
+# fix paths in a patch file generated from a maven source tree
+# (src/main/java/ and src/test/java/) so it can be applied to a
+# lockss-daemon tree (src/ and test/src/)
+
+sed -i -e 's|\([ab]\)/src/main/java/org|\1/src/org|g' \
+       -e 's|\([ab]\)/src/test/java/org|\1/test/src/org|g' "$1"
