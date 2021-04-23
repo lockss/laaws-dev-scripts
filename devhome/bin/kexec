@@ -6,6 +6,13 @@
 #     -n <namespace>      default to "lockss"
 #     -i                  start command interactively, with a tty
 
+K8S_CFG=~lockss/lockss-installer/config/k8s.cfg
+if [ ! -f "${K8S_CFG}" ]; then
+    echo "${K8S_CFG} required"
+    exit 1
+fi
+. "${K8S_CFG}"
+
 namespace="lockss"
 interactive=""
 
@@ -26,4 +33,4 @@ done
 
 name="$1"
 shift
-microk8s kubectl exec ${interactive} `kcid -n "${namespace}" "${name}"` -n "${namespace}" -- $@
+${KUBECTL_CMD} exec ${interactive} `kcid -n "${namespace}" "${name}"` -n "${namespace}" -- $@

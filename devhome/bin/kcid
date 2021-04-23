@@ -6,6 +6,12 @@
 #   Options:
 #     -n <namespace>      default to "lockss"
 
+K8S_CFG=~lockss/lockss-installer/config/k8s.cfg
+if [ ! -f "${K8S_CFG}" ]; then
+    echo "${K8S_CFG} required"
+    exit 1
+fi
+. "${K8S_CFG}"
 
 namespace="lockss"
 
@@ -39,4 +45,4 @@ case "$1" in
         break;;
 esac
 
-microk8s kubectl get po -n "${namespace}" -oname | sed 's|pod/||' | awk "/$name/"' { print $1 ; exit 0 }'
+${KUBECTL_CMD} get po -n "${namespace}" -oname | sed 's|pod/||' | awk "/$name/"' { print $1 ; exit 0 }'
