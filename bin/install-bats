@@ -4,14 +4,13 @@
 # must be run as root
 
 tmpdir=`mktemp -d batsXXXXXXXX`
-[ -z "${tmpdir}" ] && exit 1
+[ -d "${tmpdir}" ] || exit 1
 cd "${tmpdir}"
-git clone https://github.com/bats-core/bats-core.git
+git clone https://github.com/bats-core/bats-core.git || exit 1
 cd bats-core
 ./install.sh /usr/local
 cd ..
 git clone https://github.com/ztombol/bats-support
 git clone https://github.com/ztombol/bats-assert
 cp -R bats-support bats-assert /usr/local/libexec
-cd /tmp
-rm -rf "${tmpdir}"
+cd /tmp && rm -rf "${tmpdir}"
