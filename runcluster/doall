@@ -34,7 +34,7 @@ usage() {
   echo "               is \"repo/data\""
 
   echo "  -a <app_arg> Add <app_arg> to command line"
-  echo "  -r <credentials_file> Load Rest client credentials from file"
+  echo "  -s name:<credentials_file> Load Rest client credentials from file"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
   echo "  -U           Force maven to check for updated artifacts"
@@ -211,7 +211,7 @@ start_service() {
   local rest_cred_file=`abspath "${data_dir}/lockss-auth"`
 
   local bootstrap_files=`preface_each "${identity_props} ${bootstrap_props}" -p`
-  local bootstrap_args="${bootstrap_files} -r ${rest_cred_file}"
+  local bootstrap_args="${bootstrap_files} -s rest:${rest_cred_file}"
 
   local extra_args=
   local jar_file="${svc_map[${svc_name}]}"
@@ -399,7 +399,7 @@ while [ -n "$1" ]; do
     -mvnarg )
       mvn_args="${mvn_args} $2"
       shift; shift; continue ;;
-    -a | -g | -r | -x )
+    -a | -g | -s | -x )
       other_args="$other_args $1 $2"
       shift; shift; continue ;;
     -c )
