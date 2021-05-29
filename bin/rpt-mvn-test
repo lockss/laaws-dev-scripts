@@ -7,7 +7,9 @@ usage() {
  echo "Usage: $0 [-q] [-Dprop=val] <rpt-count> <class-name>"
  echo "Runs <class-name> in junit <rpt-count> times,"
  echo " sending stdout and stderr to $stdout and $stderr."
+ echo "If <class-name> is "all", runs all the tests in the current project"
  echo "-q  suppresses printing a dot for each iteration."
+ echo "-nobuild  skip code generation and compilation steps."
  echo "Other -flags are passed in to the jvm unmodified."
  echo "Must be run from project base dir."
  exit 1
@@ -18,11 +20,15 @@ if [ "$#" = "0" ]; then
 fi
 
 showdots=1
+skipargs=
 
 while true ; do
   case "$1" in
     "-q" )
       showdots=0
+      shift; continue;;
+    "-nobuild" )
+      skipargs="-DskipSwagger -DskipAntlr -DskipInfo -DskipCompileMain -DskipCompileTests"
       shift; continue;;
     "-1.8" )
       if [ -z "$JAVA_18_HOME" ] ; then
@@ -55,6 +61,9 @@ class=$2
 shift
 shift
 
+testarg=
+[ $class != "all" ] && testarg="-Dtest=$class"
+
 failcnt=0
 
 msg="Starting $rpt iterations at `date`"
@@ -66,7 +75,7 @@ while [ $ix -le $rpt ]; do
   echo "** iter $ix" >> $stderr
   echo "** iter $ix" >> $stdout
 
-  if ! mvn test -Dtest=$class >>$stdout 2>>$stderr; then
+  if ! mvn -B test $testarg $skipargs >>$stdout 2>>$stderr; then
     failcnt=$((failcnt + 1))
     [ $showdots = 1 ] && echo -n F
   else
