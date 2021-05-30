@@ -7,10 +7,10 @@ usage() {
  echo "Usage: $0 [-q] [-Dprop=val] <rpt-count> <class-name>"
  echo "Runs <class-name> in junit <rpt-count> times,"
  echo " sending stdout and stderr to $stdout and $stderr."
- echo "If <class-name> is "all", runs all the tests in the current project"
+ echo "If <class-name> is \"all\", runs all the tests in the current project"
  echo "-q  suppresses printing a dot for each iteration."
  echo "-nobuild  skip code generation and compilation steps."
- echo "Other -flags are passed in to the jvm unmodified."
+ echo "Other -flags are passed in to mvn unmodified."
  echo "Must be run from project base dir."
  exit 1
 }
@@ -42,11 +42,7 @@ while true ; do
       echo JAVA_HOME="$JAVA_HOME"
       shift; continue;;
     -* )
-      if [ -z "$jvmargs" ] ; then
-	jvmargs="$1"
-      else
-	jvmargs="$jvmargs $1"
-      fi
+      mvn_args="$mvn_args $1"
       shift; continue;;
   esac
   break;
@@ -75,7 +71,7 @@ while [ $ix -le $rpt ]; do
   echo "** iter $ix" >> $stderr
   echo "** iter $ix" >> $stdout
 
-  if ! mvn -B test $testarg $skipargs >>$stdout 2>>$stderr; then
+  if ! mvn -B ${mvn_args} test $testarg $skipargs >>$stdout 2>>$stderr; then
     failcnt=$((failcnt + 1))
     [ $showdots = 1 ] && echo -n F
   else
