@@ -1,0 +1,69 @@
+#! /bin/sh
+
+# checkout the current branch of the current project and run mvn test
+# must be run in a git project dir (with a .git subdir)
+
+usage() {
+  echo "$0 [-keep] [-q] [-b <branch>]"
+  exho "Checks out the HEAD of the current (or named) branch of"
+  echo "the current git project and runs mvn test.  The temporary build"
+  echo "directory is deleted if the build succeeds"
+  echo "  -keep        Don't delete the temporary build dir"
+  echo "  -q           Pass -q to mvn"
+  echo "  -b <branch>  Checkout named branch instead of current branch"
+}
+
+Err_exit() {
+  echo "$1" >&2
+  exit 1
+}
+
+while [ "$#" -gt 0 ] ; do
+  case "$1" in
+    "-keep" )
+      keeptemp=1
+      shift; continue;;
+    "-q" )
+      quiet=-q
+      shift; continue;;
+    "-b" )
+      branch="$2"
+      shift; shift; continue;;
+    * )
+      usage
+      exit 1
+  esac
+  exit 1
+
+done
+
+[ -r .git/config ] || err_exit "This does not appear to be a directory with a git project"
+
+tempbuildroot=target/tempbuild
+mkdir -p "${tempbuildroot}" || err_exit "mkdir ${tempbuildroot} failed"
+tempbuilddir=`mktemp -d -p "${tempbuildroot}" buildXXXXXXXX`
+
+giturl=`git config --get remote.origin.url` || err_exit "Couldn't get git URL from current project"
+
+projabsdir=`git rev-parse --show-toplevel` || err_exit "Couldn't get git project name from current project"
+projdir=`basename "${projabsdir}"`
+
+if [ -z ${branch} ]; then
+    branch=`git symbolic-ref --short HEAD` || err_exit "Couldn't get git branch from current project"
+fi
+
+echo "Checking out ${branch} branch" to ${tempbuilddir}
+echo "git url: ${giturl}"
+
+(
+  cd "${tempbuilddir}" || err_exit "cd ${tempbuilddir} failed"
+  git clone -q --depth 1 --branch "${branch}" --single-branch "${giturl}" || err_exit ""
+  cd "${projdir}" || err_exit "cd ${projdir} failed"
+  mvn $quiet test || err_exit "Maven build failed"
+)
+if [ -z "${keeptemp}" ]; then
+    echo "Succeeded, deleting ${tempbuilddir}"
+    rm -rf "${tempbuilddir}"
+else
+  echo "Succeeded, leaving ${tempbuilddir}"
+fi
