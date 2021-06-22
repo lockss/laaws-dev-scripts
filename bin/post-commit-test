@@ -13,7 +13,7 @@ usage() {
   echo "  -b <branch>  Checkout named branch instead of current branch"
 }
 
-Err_exit() {
+err_exit() {
   echo "$1" >&2
   exit 1
 }
