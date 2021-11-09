@@ -60,7 +60,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Build and test-all
-( cd ${TMPROOT}/lockss-daemon; env; ${ANT} -v test-all -Djava.io.tmpdir=${JAVATMP} ) > ${LOGFILE} 2>&1
+( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-all -Djava.io.tmpdir=${JAVATMP} ) > ${LOGFILE} 2>&1
 
 # Notify Tortoise of any failures
 if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
