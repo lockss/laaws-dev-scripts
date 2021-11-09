@@ -30,8 +30,8 @@
 
 # Nightly build script of the classic LOCKSS daemon
 
-#export JAVA_HOME='/usr/lib/jvm/java'
-export JAVA_HOME='/usr/lib/jvm/jdk1.7.0_80/'
+export JAVA_HOME='/usr/lib/jvm/java'
+#export JAVA_HOME='/usr/lib/jvm/jdk1.7.0_80/'
 export PATH="${JAVA_HOME}/bin:$PATH"
 export LANG='en_US.UTF-8'
 
@@ -40,8 +40,12 @@ LOGFILE=${TMPROOT}/lockss-nightly.log
 RPMS=/tmp/rpms/
 ANT=/usr/bin/ant
 
+JAVATMP=${TMPROOT}/javatmp
+mkdir -p ${JAVATMP}
+
 EMAIL=tortoise@lockss.org
 #EMAIL=dlvargas@stanford.edu
+#EMAIL=tal@lockss.org
 #EMAIL=lockss-sysadmin@lockss.org
 
 # Check out tree
@@ -56,7 +60,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Build and test-all
-( cd ${TMPROOT}/lockss-daemon; env; ${ANT} -v test-all ) > ${LOGFILE} 2>&1
+( cd ${TMPROOT}/lockss-daemon; env; ${ANT} -v test-all -Djava.io.tmpdir=${JAVATMP} ) > ${LOGFILE} 2>&1
 
 # Notify Tortoise of any failures
 if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
@@ -93,7 +97,7 @@ if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 else
 
 	# Run test-stf
-	( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-stf -Dsuite=postTagTests ) > ${LOGFILE} 2>&1
+	( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-stf -Dsuite=postTagTests -Djava.io.tmpdir=${JAVATMP} ) > ${LOGFILE} 2>&1
 
 	if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 
