@@ -20,6 +20,6 @@ for x in cfg repo pol mdq mdx; do
         gzip "${destdir}/$x"
     fi
 done
-( cd "${destdir}" ; tar cf "${tarfile}" * )
+( cd "${destdir}" ; tar cf - * ) >"${tarfile}"
 rm -rf "${destdir}"
 echo "tar written to ${tarfile}"
