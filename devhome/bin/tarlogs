@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ -z "${1}" ]; then
+    echo "Usage: `basename $0` <lockss-stack-base-dir> [ <tarfile> ]"
+    echo "Concatenates the segments of each service's daemon log and tars them."
+    echo " <lockss-stack-base-dir>   Parent dir of lockss-stack-XXX-* dirs"
+    echo " <tarfile>                 Output tar, defaults to /tmp/stacklogs.tar"
+    exit 1
+fi
+
+stackbase="${1}"
+destdir=`mktemp -d /tmp/logsXXXXXX`
+tarfile="${2:-/tmp/stacklogs.tar}"
+
+for x in cfg repo pol mdq mdx; do
+    logdir="${stackbase}/lockss-stack-${x}-logs"
+    if [ -d "${logdir}" ]; then
+        echo "${logdir}"
+        zcat "${logdir}"/daemon*.gz >"${destdir}/$x" ; cat "${logdir}"/daemon.log >>"${destdir}/$x"
+        gzip "${destdir}/$x"
+    fi
+done
+( cd "${destdir}" ; tar cf "${tarfile}" * )
+rm -rf "${destdir}"
+echo "tar written to ${tarfile}"
