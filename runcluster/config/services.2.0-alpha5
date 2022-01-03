@@ -5,9 +5,9 @@
 # <artifact> is groupId:artifactId:version .  In the latter case mvn will
 # be invoked to obtain the jar.
 
-repo=mvn:org.lockss.laaws:laaws-repository-service:2.11.0
-cfg=mvn:org.lockss.laaws:laaws-configuration-service:2.5.0
-poller=mvn:org.lockss.laaws:laaws-poller:2.3.0
-#mdx=mvn:org.lockss.laaws:laaws-metadata-extraction-service:2.4.0
-#mdq=mvn:org.lockss.laaws:laaws-metadata-service:2.3.0
-#soap=mvn:org.lockss.laaws:laaws-soap-service:1.1.0
+repo=mvn:org.lockss.laaws:laaws-repository-service:2.12.2
+cfg=mvn:org.lockss.laaws:laaws-configuration-service:2.6.2
+poller=mvn:org.lockss.laaws:laaws-poller:2.4.2
+#mdx=mvn:org.lockss.laaws:laaws-metadata-extraction-service:2.5.2
+#mdq=mvn:org.lockss.laaws:laaws-metadata-service:2.4.2
+#soap=mvn:org.lockss.laaws:laaws-soap-service:1.2.0
