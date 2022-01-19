@@ -440,7 +440,7 @@ if [ -n "${pln_props}" ]; then
   esac
 fi
 
-temp_svcs_file=$(mktemp runcluster.XXXXX)
+temp_svcs_file=$(mktemp runcluster.XXXXXX)
 
 # Clean up if script is interrupted or terminated.
 trap "cleanup" SIGINT SIGTERM 1 0
