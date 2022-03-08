@@ -76,6 +76,7 @@ mvn_X=
 mvn_args=
 db_props=config/derby.xml
 max_warc_size=100000000
+volatile_index=
 solr_baseurl=
 solr_collection="lockss"
 
@@ -260,6 +261,9 @@ start_service() {
         echo "repo.index.spec=solr" >> ${repo_config}
         echo "repo.index.solr.solrUrl=${solr_baseurl}" >> ${repo_config}
         echo "repo.index.solr.solrCollection=${solr_collection}" >> ${repo_config}
+      elif [ -n "${volatile_index}" ]; then
+        # No: Use non-persisted index
+        echo "repo.index.spec=volatile" >> ${repo_config}
       else
         # No: Use locally persisted index
         echo "repo.index.spec=local" >> ${repo_config}
@@ -358,6 +362,9 @@ while [ -n "$1" ]; do
       shift; continue ;;
     -derby )
       db_props=config/derby.xml
+      shift; continue ;;
+    -volatile )
+      volatile_index=1
       shift; continue ;;
     -solr )
       solr_baseurl="$2"
