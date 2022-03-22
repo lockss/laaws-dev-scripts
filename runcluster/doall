@@ -18,6 +18,7 @@ usage() {
   echo "  -pg          Use external PostgreSQL database"
   echo "  -derby       Use embedded Derby database (default)"
   echo "  -volatile    Use use a volatile artifact index"
+  echo "  -dispatching Use use a dispatching artifact index"
   echo "  -solr <url>  Use external Solr running at the provided base URL"
   echo "  -solrCollection <name>  Solr collection name to use (default lockss)"
   echo "  -id <file>   Load identity config from <file>"
@@ -78,6 +79,7 @@ mvn_args=
 db_props=config/derby.xml
 max_warc_size=100000000
 volatile_index=
+dispatching_index=
 solr_baseurl=
 solr_collection="lockss"
 
@@ -257,7 +259,12 @@ start_service() {
       fi
       echo "repo.datastore.local.basedir=${repo_abs_dirs}" >> ${repo_config}
 
-      if [ -n "${solr_baseurl}" ]; then
+      if [ -n "${dispatching_index}" ]; then
+        # Use dispatching artifact index
+        echo "repo.index.spec=dispatching" >> ${repo_config}
+        echo "repo.index.solr.solrUrl=${solr_baseurl}" >> ${repo_config}
+        echo "repo.index.solr.solrCollection=${solr_collection}" >> ${repo_config}
+      elif [ -n "${solr_baseurl}" ]; then
         # Yes: Use external Solr
         echo "repo.index.spec=solr" >> ${repo_config}
         echo "repo.index.solr.solrUrl=${solr_baseurl}" >> ${repo_config}
@@ -366,6 +373,9 @@ while [ -n "$1" ]; do
       shift; continue ;;
     -volatile )
       volatile_index=1
+      shift; continue ;;
+    -dispatching )
+      dispatching_index=1
       shift; continue ;;
     -solr )
       solr_baseurl="$2"
