@@ -31,6 +31,7 @@ usage() {
   echo "  -c <file>    Load additional config from <file> (incl tdb .xml)"
   echo "  -x <dir>     Load config from dir/*.xml (typically used for tdb files)"
   echo "  -g <group>   Set polling group to <group>"
+  echo "  -repostate <dir>  Set the Repository Service state directory to <dir>"
   echo "  -repos <dir_list>  Semicolom-separated list of repository dirs.  the word"
   echo "               \"default\" in the list designates the default repo dir, which"
   echo "               is \"repo/data\""
@@ -73,6 +74,7 @@ svcs_file_local="./config/services.local"
 forcekill=
 testing=
 repo_dirs=default
+repo_state_dir=default
 mvn_U=
 mvn_X=
 mvn_args=
@@ -246,12 +248,20 @@ start_service() {
         fi
 	repo_abs_dirs="${repo_abs_dirs}`abspath ${dir}`"
       done
+
+      local repo_abs_state_dir=
+      if [ "${repo_state_dir}" = "default" ]; then
+        repo_state_dir='./data/repo-state'
+      fi
+      repo_abs_state_dir="`abspath ${repo_state_dir}`"
+
       touch config/repo.properties
       local repo_config=`abspath config/repo.properties`
 
       echo "# THIS FILE IS GENERATED - DO NOT EDIT" > ${repo_config}
       echo >> ${repo_config}
       echo "repo.spec=custom" >> ${repo_config}
+      echo "repo.state.dir=${repo_abs_state_dir}" >> ${repo_config}
       if [ -n "${testing}" ]; then
 	  echo "repo.datastore.spec=testing" >> ${repo_config}
       else
@@ -425,6 +435,9 @@ while [ -n "$1" ]; do
       shift; shift; continue ;;
     -repos )
       repo_dirs="$2"
+      shift; shift; continue ;;
+    -repostate )
+      repo_state_dir="$2"
       shift; shift; continue ;;
     -h )
       usage
