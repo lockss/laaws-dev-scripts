@@ -17,6 +17,7 @@ usage() {
   echo "               locally built service jars)"
   echo "  -pg          Use external PostgreSQL database"
   echo "  -derby       Use embedded Derby database (default)"
+  echo "  -volatile    Use use a volatile artifact index"
   echo "  -solr <url>  Use external Solr running at the provided base URL"
   echo "  -solrCollection <name>  Solr collection name to use (default lockss)"
   echo "  -id <file>   Load identity config from <file>"
