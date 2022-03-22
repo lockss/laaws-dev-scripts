@@ -292,6 +292,26 @@ start_service() {
 #       echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
       extra_args="--spring.config.location=file:${repo_config}"
       ;;
+    solr )
+      local solr_version="8.9.0"
+      local solr_dir="./solr-${solr_version}"
+      local solr_home="${solr_dir}/server/solr"
+
+      # Download Solr binary release if not already downloaded
+      if [ ! -d "${solr_dir}" ]; then
+        curl -SL https://archive.apache.org/dist/lucene/solr/${solr_version}/solr-${solr_version}.tgz | tar xzf -
+        rm -rf "${solr_home}"
+      fi
+
+      # Create new Solr home if it doesn't exist
+      if [ ! -d "${solr_home}" ]; then
+        ( cd "${solr_dir}/server"; tar xzf ../../config/solr-home.tar.gz; rm solr/security.json )
+      fi
+
+      # Start Solr service
+      ${solr_dir}/bin/solr start
+
+      ;;
     * )
       : ;;
   esac
