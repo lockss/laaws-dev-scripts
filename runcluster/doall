@@ -324,6 +324,7 @@ start_service() {
 
       # Start Solr service
       ${solr_dir}/bin/solr start
+      touch ${pid_file}
 
       return
       ;;
