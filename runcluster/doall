@@ -364,6 +364,7 @@ stop_service() {
       # Stop Solr service
       local solr_dir="./solr"
       ${solr_dir}/bin/solr stop
+      rm ${pid_file}
       return
     ;;
   * )
