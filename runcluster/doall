@@ -157,6 +157,18 @@ copy_jar() {
       echo "No service definition found for $1" >&2
       return
       ;;
+    solr:* )
+     local version=${2#solr:}
+     local output="${libdir}/solr-${version}.tar.gz"
+     if [ ! -f "${output}" ]; then
+       curl -s https://archive.apache.org/dist/lucene/solr/${version}/solr-${version}.tgz -o "${output}"
+       if [ $? -ne 0 ]; then
+         echo "Couldn't download Solr" >&2
+         return
+       fi
+     fi
+     echo "${output}"
+     ;;
     mvn:* )
       # mvn:artifact - strip "mvn:"
       local art=${2#mvn:}
@@ -227,6 +239,9 @@ start_service() {
       echo "${svc_name} already running"
       return 1
   fi
+
+  local tmp_jar=`copy_jar "${svc_name}" "${jar_file}"`
+
   case "${svc_name}" in
     cfg )
       # cfgsvc loads main config files, does not load from cfgsvc
@@ -293,13 +308,12 @@ start_service() {
       extra_args="--spring.config.location=file:${repo_config}"
       ;;
     solr )
-      local solr_version="8.9.0"
-      local solr_dir="./solr-${solr_version}"
+      echo "Starting ${svc_name}"
+      local solr_dir="./solr"
       local solr_home="${solr_dir}/server/solr"
 
-      # Download Solr binary release if not already downloaded
       if [ ! -d "${solr_dir}" ]; then
-        curl -SL https://archive.apache.org/dist/lucene/solr/${solr_version}/solr-${solr_version}.tgz | tar xzf -
+        tar xzf "${tmp_jar}" --one-top-level=solr --strip-components=1
         rm -rf "${solr_home}"
       fi
 
@@ -311,13 +325,13 @@ start_service() {
       # Start Solr service
       ${solr_dir}/bin/solr start
 
+      return
       ;;
     * )
       : ;;
   esac
 
   local std_file="${logdir}/${svc_name}.std"
-  local tmp_jar=`copy_jar "${svc_name}" "${jar_file}"`
   if [ -n "${tmp_jar}" ]; then
       echo "Starting ${svc_name}"
       ( env REPO_MAX_WARC_SIZE="${max_warc_size}" \
@@ -343,6 +357,15 @@ start_service() {
 stop_service() {
   local svc_name="$1"
   local pid_file="${piddir}/${svc_name}.pid"
+
+  case "${svc_name}" in
+  solr )
+      # Stop Solr service
+      local solr_dir="./solr"
+      ${solr_dir}/bin/solr stop
+      return
+    ;;
+  * )
   if [ -f ${pid_file} ] ; then
       local pid="`cat ${pid_file}`"
       if [ -n "${pid}" ] ; then
@@ -360,6 +383,8 @@ stop_service() {
   else
     echo "${svc_name} not running"
   fi
+  ;;
+  esac
 }
 
 cleanup() {
