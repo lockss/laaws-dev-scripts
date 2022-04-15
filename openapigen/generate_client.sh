@@ -84,6 +84,7 @@ parse_params() {
   [[ -z "${input-}" ]] && die "Missing required parameter: input"
   [[ -z "${output-}" ]] && output="./out/${module}"
 
+
   return 0
 }
 
