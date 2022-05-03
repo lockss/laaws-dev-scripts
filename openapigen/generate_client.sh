@@ -4,7 +4,9 @@ set -Eeuo pipefail
 trap cleanup SIGINT SIGTERM ERR EXIT
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
-export JAVA_POST_PROCESS_FILE="clang-format -i"
+export JAVA_POST_PROCESS_FILE="clang-format --style=Google -i"
+
+header=$script_dir/LICENSE
 
 usage() {
   cat <<EOF
@@ -82,7 +84,7 @@ parse_params() {
   # check required params and arguments
   [[ -z "${module-}" ]] && die "Missing required name: module"
   [[ -z "${input-}" ]] && die "Missing required parameter: input"
-  [[ -z "${output-}" ]] && output="./out/${module}"
+  [[ -z "${output-}" ]] && output="$script_dir/out/${module}"
 
 
   return 0
@@ -95,7 +97,7 @@ generate_code() {
 --artifact-id=laaws-java-client \
 --model-package=org.lockss.laaws.model.${module} \
 --api-package=org.lockss.laaws.api.${module} \
---invoker-package=org.lockss.laaws.client.${module} \
+--invoker-package=org.lockss.laaws.client \
 --additional-properties=hideGenerationTimestamp=true \
 --additional-properties=serializableModel=true \
 --additional-properties=serializationLibrary=gson \
@@ -106,8 +108,19 @@ generate_code() {
 -o ${output}
 
 }
+
+fix_files() {
+  for f in $(find ${output} -type f -name "*.java"); do
+    cat "$header" "$f" > tmpfile; mv tmpfile $f
+    sed -i.backup "s/localVarApiClient/apiClient/g" $f && rm $f.backup
+    sed -i.backup "s/ApiClient/V2RestClient/g" $f && rm $f.backup
+  done
+}
+
 parse_params "$@"
 setup_colors
 
 # script logic here
 generate_code
+fix_files
+
