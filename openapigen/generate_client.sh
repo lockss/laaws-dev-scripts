@@ -112,8 +112,9 @@ generate_code() {
 fix_files() {
   for f in $(find ${output} -type f -name "*.java"); do
     cat "$header" "$f" > tmpfile; mv tmpfile $f
+    sed -i.backup "s/import org.lockss.laaws.client.ApiClient/import org.lockss.laaws.client.V2RestClient/g" $f && rm $f.backup
     sed -i.backup "s/localVarApiClient/apiClient/g" $f && rm $f.backup
-    sed -i.backup "s/ApiClient/V2RestClient/g" $f && rm $f.backup
+    sed -i.backup "s/ApiClient /V2RestClient /g" $f && rm $f.backup
   done
 }
 
