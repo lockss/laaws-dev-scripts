@@ -1,0 +1,3 @@
+# invoke df, filtering out Kubernetes mounts
+
+df -x overlay $@ | grep -v cri/
