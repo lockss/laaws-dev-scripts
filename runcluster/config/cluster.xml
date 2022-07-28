@@ -76,6 +76,7 @@
         <value>crawler=:24630:24631</value>
         <value>mdx=:24640:24641</value>
         <value>mdq=:24650:24651</value>
+        <value>soap=:24675</value>
       </list>
     </property>
 
