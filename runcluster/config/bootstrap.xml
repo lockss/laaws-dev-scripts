@@ -7,7 +7,7 @@
 
   <property name="org.lockss.platform">
 
-    <property name="version" value="runcluster-5" />
+    <property name="version" value="runcluster-6" />
     <property name="tmpDir" value="data/temp" />
     <property name="logdirectory" value="logs" />
 
