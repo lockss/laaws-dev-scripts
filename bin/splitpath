@@ -1,0 +1,4 @@
+# Split a colon-separated java classpath (or *nix executable path) into
+# one element per line
+
+sed -r 's/([^:]*):/\1\n/g' $1

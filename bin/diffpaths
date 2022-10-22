@@ -1,0 +1,27 @@
+# Show the differences between two Java classpaths
+
+usage() {
+  echo "$0 <cp1_file> <cp2_file>"
+  exho "Converts the classpaths in the two files to one entry per line,"
+  echo "then diffs them."
+}
+
+cleanup() {
+  [ -n "${t1}" ] && rm "${t1}"
+  [ -n "${t2}" ] && rm "${t2}"
+}
+
+if [ "$#" -ne 2 ] ; then
+  usage
+  exit 1
+fi
+
+# Clean up if script is interrupted or terminated.
+trap "cleanup" SIGINT SIGTERM 1 0
+
+t1=`mktemp /tmp/cp1_XXXXX`
+t2=`mktemp /tmp/cp2_XXXXX`
+
+splitpath $1 >${t1}
+splitpath $2 >${t2}
+diff -U 0 --label "$1" --label "$2" ${t1} ${t2}
