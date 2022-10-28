@@ -1,6 +1,6 @@
 # Running LOCKSS in a Development Environment
 
-**Version 1.4-dev**
+**Version 6-dev**
 
 `runcluster` is a framework to run a set of LOCKSS services (a cluster)
 comprising a single LOCKSS node, in a development environment.  It's a work
@@ -56,6 +56,17 @@ not XML, so only simple assignments are allowed.  E.g., to set the log
 level of `MyClass` to debug3:
 
     org.lockss.log.MyClass.level=debug3
+
+## Version 6 Changes
+
+*   The repository disk layout has changed, as well as the Solr
+    schema.  Content collected with runcluster 5 or earlier will not
+    work unmodified, and should be deleted before starting, with
+    `rm -rf  data/repo data/repo-files data/solr-files`.
+
+    (It is possible to convert old content.  If you need to do this
+    either contact us or look at the upgrade script in
+    lockss-installer to see what steps are needed.)
 
 ## Version 5 Changes
 
