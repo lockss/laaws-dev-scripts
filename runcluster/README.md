@@ -1,4 +1,4 @@
-# Running LOCKSS in a Development Environment
+# Running LOCKSS 2.0 in a Development Environment
 
 **Version 6-dev**
 
@@ -33,7 +33,7 @@ fetch JARs totalling .7-1.1GB.)  To use locally built JARs in sibling
 directories run `./start -local [-pg]`.  (See `config/services.snapshot` or
 `config/services.local`.)  The three essential services (config service,
 repository service, poller/crawler service) are run by default; to add the
-metadata services uncomment those lines in `config/services.xxx`.  Run
+metadata services or SOAP uncomment those lines in `config/services.xxx`.  Run
 `./start -h` for more options.
 
 To test a plugin without signing and uploading it to a plugin registry,
