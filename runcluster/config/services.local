@@ -11,4 +11,4 @@ poller=../../laaws-poller/target/current-with-deps.jar
 #mdx=../../laaws-metadataextractor/target/current-with-deps.jar
 #mdq=../../laaws-metadataservice/target/current-with-deps.jar
 #soap=../../laaws-soap-service/target/current-with-deps.jar
-solr=solr:8.11.0
+solr=solr:8.11.2
