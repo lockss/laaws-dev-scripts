@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Generate the runcluster config/services.snapshot and
+# config/services.release from the latest snapshot and release
+# artifact-versions files in the lockss-installer project on github.
+
+set -x
+
+outstem="`dirname $0`/../runcluster/config/services"
+temp_dir="$(mktemp -d versionsdir.XXXXXX)"
+
+fetch_versions_file() {
+ local versions_name=$1
+ local versions_url="https://raw.githubusercontent.com/lockss/lockss-installer/master/artifact-versions/${versions_name}"
+ local tmpfile=$(mktemp "${temp_dir}/versions.XXXXXX")
+
+ curl -s "${versions_url}" -o $tmpfile
+ temp_files="${temp_files} $tmpfile"
+ echo $tmpfile
+}
+
+subst_ver() {
+  local template_file=$1
+  local ver_name=$2
+  local ver_file=`fetch_versions_file ${ver_name}`
+  substver "$ver_file" < ${template_file}
+}
+
+cleanup() {
+  if [ -n "${temp_dir}" ]; then
+    /bin/rm -rf "${temp_dir}"
+  fi
+}
+
+# Clean up if script is interrupted or terminated.
+trap "cleanup" SIGINT SIGTERM 1 0
+
+
+subst_ver config/services.mvn-template snapshot-latest >"${outstem}.snapshot"
+subst_ver config/services.mvn-template release-latest >"${outstem}.release"

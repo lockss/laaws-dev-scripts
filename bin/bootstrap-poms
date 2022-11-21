@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# TL;DR: Run this script once, with no args, to install the necessary
+# prerequisites to performs development builds
+
+# Bootstrapping a few POMs is sometimes necessary because LOCKSS
+# SNAPSHOT artifacts are stored in the Sonatype OSSRH Snapshots
+# repository, which maven doesn't search by default.  That repository
+# is added by lockss-parent-pom, but maven doesn't know where to find
+# the SNAPSHOT version of lockss-parent-pom until it's installed.  A
+# similar problem results from attempting to use a SNAPSHOT version of
+# lockss-plugins-archetype before the necessary parent POMs have been
+# installed.
+
+# This script can install the POMs in either of two ways:
+# * Using Maven to fetch already-built artifacts from a remote Maven
+#   repository
+# * Cloning git repos and building locally
+#
+# The former is generally recommended unless you're planning to build
+# everything from sources.
+
+usage() {
+  echo "Usage: $0 [ git [ <branch> ] | mvn [ <variant> ] ]"
+  echo "  mvn <variant>  (default) fetches latest uploaded maven artifacts,"
+  echo "                 either \"snapshot\" (default) or \"release\""
+  echo "  git <branch>   clones from git (default \"develop\" branch)"
+  echo "                 and builds/installs"
+}
+
+method=${1:-mvn}
+variant=${2:-snapshot}
+branch=${2:-develop}
+
+ver_file=""
+
+cleanup() {
+  if [ -n "${ver_file}" ]; then
+    /bin/rm -f "${ver_file}"
+  fi
+}
+
+# Clean up if script is interrupted or terminated.
+trap "cleanup" SIGTERM SIGINT 1 0
+
+# fetch_versions_file snapshot-latest|release-latest
+fetch_versions_file() {
+  local versions_name=$1
+  local versions_url="https://raw.githubusercontent.com/lockss/lockss-installer/master/artifact-versions/${versions_name}"
+  local tmpfile=$(mktemp /tmp/versions.XXXXXX)
+
+  curl -s "${versions_url}" -o $tmpfile
+  echo $tmpfile
+}
+
+# set_up_variant snapshot|release
+# set_mvn_repo, and fetch appropriate artifact-versions file and set ver_file
+set_up_variant() {
+  local variant=${1}
+  ver_file=`fetch_versions_file ${variant}-latest`
+
+  case "${variant}" in
+    snapshot )
+      mvn_repo="https://oss.sonatype.org/content/repositories/snapshots"
+      ;;
+    release )
+      mvn_repo="https://mvnrepository.com/artifact/"
+      ;;
+    * )
+      echo "Unknown variant: ${variant}"
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+build_one_art() {
+  local git_repo="$1"
+  local subdir="${2:-.}"
+  local proj_root="${git_repo}"
+  if [[ -n "$2" ]]; then
+    proj_root="${git_repo}/$2"
+  fi
+  ( cd /tmp && git clone "https://github.com/lockss/${git_repo}" && cd "${git_repo}" && git checkout ${branch} && cd "${subdir}" && mvn install ) && rm -rf "/tmp/${git_repo}"
+}
+
+# fetch_one <groupid>:<artifactid>
+fetch_one_art() {
+  local art=`artifact-version -f ${ver_file} ${1}`
+  mvn -B dependency:get \
+    -DremoteRepositories=${mvn_repo} \
+    -Dartifact=${art} \
+    -Dtransitive=false
+}
+
+case "${method}" in
+  git )
+    build_one_art lockss-parent-pom
+    build_one_art lockss-pom-bundles lockss-plugins-parent-pom
+    build_one_art lockss-plugins-archetype
+    ;;
+  mvn )
+    set_up_variant ${variant}
+    fetch_one_art org.lockss:lockss-parent-pom
+    fetch_one_art org.lockss:lockss-plugins-parent-pom
+    fetch_one_art org.lockss:lockss-plugins-archetype
+    ;;
+  * )
+    echo "Unknown method: ${method}"
+    usage
+    exit 1
+    ;;
+esac

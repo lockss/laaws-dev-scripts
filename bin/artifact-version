@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# lookup the version corresponding to an artifactId in a versions file
+
+usage() {
+  echo "Usage: `basename $0` [ -f ] <versions-file> <groupId>.<artifactId>"
+  echo "         -f return fully-qualified groupId.artifactId.version"
+}
+
+fqav=""
+
+while true ; do
+  case "$1" in
+    "-f" )
+      fqav=1
+      shift; continue;;
+    -* )
+      usage
+      exit 1
+  esac
+  break;
+done
+
+versions_file=${1}
+artifact=${2}
+
+if [ -z "${versions_file}" -o -z "${artifact}" ]; then
+  usage
+  exit 1
+fi
+
+if [ -n "${fqav}" ]; then
+  awk -v s=1 "\$1 == \"${artifact}\" {print \$1\":\"\$2;s=0}END{exit s}" < ${versions_file}
+else
+  awk -v s=1 "\$1 == \"${artifact}\" {print \$2;s=0}END{exit s}" < ${versions_file}
+fi

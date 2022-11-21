@@ -1,0 +1,25 @@
+#! /usr/bin/perl
+
+# usage: substver <versions-file>
+# reads a template from stdin, substitutes strings of the form
+# ${artver:foo} with the cersion corresponding to <foo> in the versions-file
+# writes output to stdout
+
+my %ver;
+my $ver_file = shift(@ARGV);
+open(my $fh2, "<", $ver_file)
+   or die("Can't open \"$ver_file\": $!\n");
+
+# read the versions into a map
+while (<$fh2>) {
+  chomp;
+  my @fields = split /\t/;
+  $ver{$fields[0]} = $fields[1];
+}
+
+# substitute matches with version from the map
+while (<>)
+{ 
+  s|(\$\{artver:)(.+)(\})|$ver{$2}|;
+  print;
+}
