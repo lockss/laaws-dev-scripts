@@ -95,7 +95,7 @@ cp_jars=lib			# jars to put on classpath.  "lib" is
 pln_props="config/lockss.xml"
 cluster_props="config/cluster.xml config/cluster.opt"
 identity_props="config/identity-standalone.xml"
-bootstrap_props="resource:application.properties config/bootstrap.xml"
+bootstrap_props="resource:application.properties config/bootstrap.xml config/bootstrap.opt"
 
 other_props=
 java_args="-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dorg.springframework.boot.logging.LoggingSystem=none"
@@ -241,7 +241,7 @@ start_service() {
   echo -n "lockss-u:lockss-p" >"${data_dir}/lockss-auth"
   local rest_cred_file=`abspath "${data_dir}/lockss-auth"`
 
-  local bootstrap_files=`preface_each "${identity_props} ${bootstrap_props}" -p`
+  local bootstrap_files=`preface_each "${identity_props} ${bootstrap_props}" -b`
   local bootstrap_args="${bootstrap_files} -s rest:${rest_cred_file}"
 
   local extra_args=

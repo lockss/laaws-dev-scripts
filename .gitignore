@@ -31,6 +31,7 @@ runcluster/logs
 runcluster/pids
 runcluster/tmplib
 runcluster/config/repo.properties
+runcluster/config/bootstrap.opt
 runcluster/config/cluster.opt
 runcluster/derby.log
 /openapigen/out/
