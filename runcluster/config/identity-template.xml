@@ -32,11 +32,11 @@
     <property name="localIPAddress" value="1.2.3.4" />
 
     <!-- *** Change this to the machine's fully qualified domain name. -->
-    <property name="fqdn" value="your.host.tld" />
+    <property name="fqdn" value="your.host.fqdn" />
 
     <!-- *** If you'd like this LOCKSS instance to be able to send mail,
          Change this to the name of a suitable mail relay. -->
-    <property name="smtphost" value="mail.relay.tld" />
+    <property name="smtphost" value="mail.relay.fqdn" />
 
   <!-- Do not edit. -->
   </property>
