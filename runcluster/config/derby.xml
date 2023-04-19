@@ -20,17 +20,17 @@
       </then>
     </if>
 
-	  <if>
-		  <test serviceAbbrev="repo"/>
-		  <then>
-			  <property name="db.startDerbyNetworkServerControl" value="true"/>
-			  <property name="repositoryDbManager.datasource.className"
-						value="org.apache.derby.jdbc.ClientDataSource"/>
-			  <property name="repositoryDbManager.datasource.portNumber" value="1527"/>
-			  <property name="repositoryDbManager.datasource.password"
-						value="goodPassword"/>
-		  </then>
-	  </if>
+    <if>
+      <test serviceAbbrev="repo"/>
+        <then>
+	  <property name="db.startDerbyNetworkServerControl" value="false"/>
+	  <property name="repositoryDbManager.datasource.className"
+	      value="org.apache.derby.jdbc.ClientDataSource"/>
+	  <property name="repositoryDbManager.datasource.portNumber" value="1527"/>
+	  <property name="repositoryDbManager.datasource.password"
+	      value="goodPassword"/>
+      </then>
+    </if>
 
     <if>
       <test serviceAbbrev="mdx"/>
@@ -59,12 +59,6 @@
 		  value="goodPassword"/>
       </then>
     </if>
-
-<!--     <if> -->
-<!--       <test serviceAbbrev="repo"/> -->
-<!--       <then> -->
-<!--       </then> -->
-<!--     </if> -->
 
 <!--     <if> -->
 <!--       <test serviceAbbrev="poller"/> -->
