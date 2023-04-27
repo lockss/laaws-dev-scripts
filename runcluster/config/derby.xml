@@ -12,39 +12,46 @@
       <test serviceAbbrev="cfg"/>
       <then>
 	<property name="db.startDerbyNetworkServerControl" value="true"/>
-	<property name="configDbManager.datasource.className"
-		  value="org.apache.derby.jdbc.ClientDataSource"/>
-	<property name="configDbManager.datasource.portNumber" value="1527"/>
-	<property name="configDbManager.datasource.password"
-		  value="goodPassword"/>
+	<property name="configDbManager.datasource">
+	  <property name="className"
+                    value="org.apache.derby.jdbc.ClientDataSource"/>
+	  <property name="portNumber" value="1527"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="dbcp.enabled" value="true"/>
+	</property>
       </then>
     </if>
 
     <if>
       <test serviceAbbrev="repo"/>
-        <then>
-	  <property name="db.startDerbyNetworkServerControl" value="false"/>
-	  <property name="repositoryDbManager.datasource.className"
-	      value="org.apache.derby.jdbc.ClientDataSource"/>
-	  <property name="repositoryDbManager.datasource.portNumber" value="1527"/>
-	  <property name="repositoryDbManager.datasource.password"
-	      value="goodPassword"/>
+      <then>
+	<property name="configDbManager.datasource">
+	  <property name="className"
+                    value="org.apache.derby.jdbc.ClientDataSource"/>
+	  <property name="portNumber" value="1527"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="dbcp.enabled" value="true"/>
+	</property>
       </then>
     </if>
 
     <if>
       <test serviceAbbrev="mdx"/>
       <then>
-	<property name="metadataDbManager.datasource.className"
-		  value="org.apache.derby.jdbc.ClientDataSource"/>
-	<property name="metadataDbManager.datasource.portNumber" value="1527"/>
-	<property name="metadataDbManager.datasource.password"
-		  value="goodPassword"/>
-	<property name="jobDbManager.datasource.className"
-		  value="org.apache.derby.jdbc.ClientDataSource"/>
-	<property name="jobDbManager.datasource.portNumber" value="1527"/>
-	<property name="jobDbManager.datasource.password"
-		  value="goodPassword"/>
+	<property name="metadataDbManager.datasource">
+	  <property name="className"
+                    value="org.apache.derby.jdbc.ClientDataSource"/>
+	  <property name="portNumber" value="1527"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="dbcp.enabled" value="true"/>
+	</property>
+	<property name="jobDbManager.datasource">
+	  <property name="className"
+                    value="org.apache.derby.jdbc.ClientDataSource"/>
+	  <property name="portNumber" value="1527"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="dbcp.enabled" value="true"/>
+	</property>
       </then>
     </if>
 
@@ -52,11 +59,13 @@
       <test serviceAbbrev="mdq"/>
       <then>
 	<property name="metadataDbManager.waitForExternalSetup" value="true"/>
-	<property name="metadataDbManager.datasource.className"
-		  value="org.apache.derby.jdbc.ClientDataSource"/>
-	<property name="metadataDbManager.datasource.portNumber" value="1527"/>
-	<property name="metadataDbManager.datasource.password"
-		  value="goodPassword"/>
+	<property name="metadataDbManager.datasource">
+	  <property name="className"
+                    value="org.apache.derby.jdbc.ClientDataSource"/>
+	  <property name="portNumber" value="1527"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="dbcp.enabled" value="true"/>
+	</property>
       </then>
     </if>
 

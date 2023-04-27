@@ -8,98 +8,89 @@
     <if>
       <test serviceAbbrev="cfg"/>
       <then>
-	<property name="configDbManager.datasource.className"
-		  value="org.postgresql.ds.PGSimpleDataSource"/>
-<!-- 	<property name="configDbManager.datasource.user" value="postgres"/> -->
-	<property name="configDbManager.datasource.password"
-		  value="goodPassword"/>
-<!-- 	<property name="configDbManager.datasource.serverName" -->
-<!-- 		  value="localhost"/> -->
-<!-- 	<property name="configDbManager.datasource.portNumber" -->
-<!-- 		  value="5432"/> -->
-<!-- 	<property name="configDBManager.datasource.schemaName" value="postgres"/> -->
-	<property name="configDBManager.datasource.schemaName" value="LOCKSS"/>
+	<property name="configDbManager.datasource">
+	  <property name="className"
+                    value="org.postgresql.ds.PGSimpleDataSource"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="schemaName" value="LOCKSS"/>
+	  <property name="dbcp.enabled" value="true"/>
+<!-- 	  <property name="user" value="postgres"/> -->
+<!-- 	  <property name="serverName" value="localhost"/> -->
+<!-- 	  <property name="portNumber" value="5432"/> -->
+	</property>
       </then>
     </if>
 
-	  <if>
-		  <test serviceAbbrev="repo"/>
-		  <then>
-			  <property name="repositoryDbManager.datasource.className"
-						value="org.postgresql.ds.PGSimpleDataSource"/>
-			  <!-- 	<property name="repositoryDbManager.datasource.user" value="postgres"/> -->
-			  <property name="repositoryDbManager.datasource.password"
-						value="goodPassword"/>
-			  <!-- 	<property name="repositoryDbManager.datasource.serverName" -->
-			  <!-- 		  value="localhost"/> -->
-			  <!-- 	<property name="repositoryDbManager.datasource.portNumber" -->
-			  <!-- 		  value="5432"/> -->
-			  <!-- 	<property name="repositoryDBManager.datasource.schemaName" value="postgres"/> -->
-			  <property name="repositoryDBManager.datasource.schemaName" value="LOCKSS"/>
-		  </then>
-	  </if>
+    <if>
+      <test serviceAbbrev="repo"/>
+      <then>
+	<property name="repositoryDbManager.datasource">
+	  <property name="className"
+		    value="org.postgresql.ds.PGSimpleDataSource"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="schemaName" value="LOCKSS"/>
+	  <property name="dbcp.enabled" value="true"/>
+<!-- 	  <property name="user" value="postgres"/> -->
+<!--      <property name="serverName" value="localhost"/> -->
+<!-- 	  <property name="portNumber" value="5432"/> -->
+	</property>
+      </then>
+    </if>
 
     <if>
       <test serviceAbbrev="mdx"/>
       <then>
-	<property name="metadataDbManager.datasource.className"
-		  value="org.postgresql.ds.PGSimpleDataSource"/>
-<!-- 	<property name="metadataDbManager.datasource.user" value="postgres"/> -->
-	<property name="metadataDbManager.datasource.password"
-		  value="goodPassword"/>
-<!-- 	<property name="metadataDbManager.datasource.serverName" -->
-<!-- 		  value="localhost"/> -->
-<!-- 	<property name="metadataDbManager.datasource.portNumber" -->
-<!-- 		  value="5432"/> -->
-<!-- 	<property name="metadataDbManager.datasource.schemaName" value="postgres"/> -->
-	<property name="metadataDbManager.datasource.schemaName" value="LOCKSS"/>
-	<property name="jobDbManager.datasource.className"
-		  value="org.postgresql.ds.PGSimpleDataSource"/>
-<!-- 	<property name="jobDbManager.datasource.user" value="postgres"/> -->
-	<property name="jobDbManager.datasource.password"
-		  value="goodPassword"/>
-<!-- 	<property name="jobDbManager.datasource.serverName" -->
-<!-- 		  value="localhost"/> -->
-<!-- 	<property name="jobDbManager.datasource.portNumber" -->
-<!-- 		  value="5432"/> -->
-<!-- 	<property name="jobDbManager.datasource.schemaName" value="postgres"/> -->
-	<property name="jobDbManager.datasource.schemaName" value="LOCKSS"/>
+	<property name="metadataDbManager.datasource">
+	  <property name="className"
+		    value="org.postgresql.ds.PGSimpleDataSource"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="schemaName" value="LOCKSS"/>
+	  <property name="dbcp.enabled" value="true"/>
+<!-- 	  <property name="user" value="postgres"/> -->
+<!--      <property name="serverName" value="localhost"/> -->
+<!-- 	  <property name="portNumber" value="5432"/> -->
+	</property>
+
+	<property name="jobDbManager.datasource">
+	  <property name="className"
+		    value="org.postgresql.ds.PGSimpleDataSource"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="schemaName" value="LOCKSS"/>
+	  <property name="dbcp.enabled" value="true"/>
+<!-- 	  <property name="user" value="postgres"/> -->
+<!--      <property name="serverName" value="localhost"/> -->
+<!-- 	  <property name="portNumber" value="5432"/> -->
+	</property>
       </then>
     </if>
 
     <if>
       <test serviceAbbrev="mdq"/>
       <then>
-	<property name="metadataDbManager.datasource.className"
-		  value="org.postgresql.ds.PGSimpleDataSource"/>
-<!-- 	<property name="metadataDbManager.datasource.user" value="postgres"/> -->
-	<property name="metadataDbManager.datasource.password"
-		  value="goodPassword"/>
-<!-- 	<property name="metadataDbManager.datasource.serverName" -->
-<!-- 		  value="localhost"/> -->
-<!-- 	<property name="metadataDbManager.datasource.portNumber" -->
-<!-- 		  value="5432"/> -->
-<!-- 	<property name="metadataDbManager.datasource.schemaName" value="postgres"/> -->
-	<property name="metadataDbManager.datasource.schemaName" value="LOCKSS"/>
-	<property name="jobDbManager.datasource.className"
-		  value="org.postgresql.ds.PGSimpleDataSource"/>
-<!-- 	<property name="jobDbManager.datasource.user" value="postgres"/> -->
-	<property name="jobDbManager.datasource.password"
-		  value="goodPassword"/>
-<!-- 	<property name="jobDbManager.datasource.serverName" -->
-<!-- 		  value="localhost"/> -->
-<!-- 	<property name="jobDbManager.datasource.portNumber" -->
-<!-- 		  value="5432"/> -->
-<!-- 	<property name="jobDbManager.datasource.schemaName" value="postgres"/> -->
-	<property name="jobDbManager.datasource.schemaName" value="LOCKSS"/>
+	<property name="metadataDbManager.waitForExternalSetup" value="true"/>
+	<property name="metadataDbManager.datasource">
+	  <property name="className"
+		    value="org.postgresql.ds.PGSimpleDataSource"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="schemaName" value="LOCKSS"/>
+	  <property name="dbcp.enabled" value="true"/>
+<!-- 	  <property name="user" value="postgres"/> -->
+<!--      <property name="serverName" value="localhost"/> -->
+<!-- 	  <property name="portNumber" value="5432"/> -->
+	</property>
+	<property name="jobDbManager.waitForExternalSetup" value="true"/>
+	<property name="jobDbManager.datasource">
+	  <property name="className"
+		    value="org.postgresql.ds.PGSimpleDataSource"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="schemaName" value="LOCKSS"/>
+	  <property name="dbcp.enabled" value="true"/>
+<!-- 	  <property name="user" value="postgres"/> -->
+<!--      <property name="serverName" value="localhost"/> -->
+<!-- 	  <property name="portNumber" value="5432"/> -->
+	</property>
       </then>
     </if>
-
-<!--     <if> -->
-<!--       <test serviceAbbrev="repo"/> -->
-<!--       <then> -->
-<!--       </then> -->
-<!--     </if> -->
 
 <!--     <if> -->
 <!--       <test serviceAbbrev="poller"/> -->
