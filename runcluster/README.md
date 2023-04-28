@@ -6,6 +6,8 @@
 comprising a single LOCKSS node, in a development environment.  It's a work
 in progress; details are likely to change.
 
+### Note: currently Java 8 is required.
+
 ## Optional Database Setup
 
 By default, an internal Derby database is used.  This should be sufficient
