@@ -34,6 +34,13 @@
     </if>
 
     <if>
+      <test serviceAbbrev="crawler"/>
+      <then>
+	<property name="diskSpacePaths" value="./data/crawler-files"/>
+      </then>
+    </if>
+
+    <if>
       <test serviceAbbrev="mdx"/>
       <then>
 	<property name="diskSpacePaths" value="./data/mdx-files"/>

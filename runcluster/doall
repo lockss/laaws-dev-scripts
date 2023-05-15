@@ -17,6 +17,7 @@ usage() {
   echo "               locally built service jars)"
   echo "  -pg          Use external PostgreSQL database"
   echo "  -derby       Use embedded Derby database (default)"
+  echo "  -java <path> Specify path to Java 8 executable"
   echo "  -volatile    Use use a volatile artifact index"
   echo "  -dispatching Use use a dispatching artifact index"
   echo "  -solr <url>  Use Solr, start and stop with other services"
@@ -86,6 +87,7 @@ dispatching_index=
 solr_baseurl=
 start_solr=
 solr_collection="lockss-repo"
+java_bin=java
 
 declare -A svc_map		# maps svc_name -> jar or artifact
 svc_list=()			# ordered array of svc_name
@@ -353,7 +355,7 @@ start_service() {
             LOG4J_LOCKSS_CONFIG="${l4j_xml}" \
             LOCKSS_LOG_DIR="${logdir}" \
             LOCKSS_SERVICE_NAME="${svc_name}" \
-	    java ${java_args} "-Dloader.path=${cp_jars}" -jar ${tmp_jar} ${name_arg} ${bootstrap_args} ${cfgsvc_args} ${local_props_args} ${other_args} ${extra_args} > ${std_file} 2>&1 &
+	    ${java_bin} ${java_args} "-Dloader.path=${cp_jars}" -jar ${tmp_jar} ${name_arg} ${bootstrap_args} ${cfgsvc_args} ${local_props_args} ${other_args} ${extra_args} > ${std_file} 2>&1 &
 	pid=$!
 	if [ -n "${pid_file}" ]; then
 	    echo ${pid} > ${pid_file}
@@ -432,6 +434,9 @@ while true ; do
     -derby )
       db_props=config/derby.xml
       shift; continue ;;
+    -java )
+      java_bin="$2"
+      shift; shift; continue ;;
     -volatile )
       volatile_index=1
       shift; continue ;;

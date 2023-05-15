@@ -8,6 +8,7 @@
 repo=../../laaws-repository-service/target/current-with-deps.jar
 cfg=../../laaws-configservice/target/current-with-deps.jar
 poller=../../laaws-poller/target/current-with-deps.jar
+crawler=../../laaws-crawler-service/target/current-with-deps.jar
 #mdx=../../laaws-metadataextractor/target/current-with-deps.jar
 #mdq=../../laaws-metadataservice/target/current-with-deps.jar
 #soap=../../laaws-soap-service/target/current-with-deps.jar

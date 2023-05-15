@@ -6,6 +6,11 @@
 comprising a single LOCKSS node, in a development environment.  It's a work
 in progress; details are likely to change.
 
+## Prerequisites
+
+runcluster requires Maven 3 and Java 8.  (The path to the java
+executable may be specified on the command line.)
+
 ## Optional Database Setup
 
 By default, an internal Derby database is used.  This should be sufficient
