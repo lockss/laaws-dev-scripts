@@ -40,11 +40,18 @@
       <test serviceAbbrev="poller"/>
       <then>
 	<!-- poller crawls other AUs -->
-	<property name="crawler.enabled" value="true"/>
-	<property name="daemon.crawlMode" value="NonPlugins"/>
 	<property name="poll.v3.enableV3Poller" value="true"/>
 	<property name="poll.v3.enableV3Voter" value="true"/>
 	<property name="scomm.enabled" value="true"/>
+      </then>
+    </if>
+
+    <if>
+      <test serviceAbbrev="crawler"/>
+      <then>
+	<!-- poller crawls other AUs -->
+	<property name="crawler.enabled" value="true"/>
+	<property name="daemon.crawlMode" value="All"/>
       </then>
     </if>
 
@@ -73,9 +80,9 @@
         <value>repo=:24610</value>     <!--repo has no UI port-->
         <value>cfg=:24620:24621</value>
         <value>poller=:24630:24631</value>
-        <value>crawler=:24630:24631</value>
         <value>mdx=:24640:24641</value>
         <value>mdq=:24650:24651</value>
+        <value>crawler=:24660:24661</value>
         <value>soap=:24675</value>
       </list>
     </property>
