@@ -77,7 +77,7 @@
     <property name="crawler.threadPool.max" value="3"/>
 
     <property name="log">
-      <property name="default.level" value="debug"/>
+      <property name="default.level" value="debug2"/>
       <property name="Scheduler.level" value="info"/>
       <property name="CrawlerImpl.level" value="info"/>
       <property name="BaseCrawler.level" value="info"/>
@@ -93,7 +93,7 @@
       <property name="deleteExtraFiles" value="false"/>
       <!--
 	  Required for a closed network (all peers listed in
-          initialV3PeerList 
+          initialV3PeerList
       -->
       <property name="enableDiscovery" value="false"/>
       <property name="minNominationSize" value="0"/>

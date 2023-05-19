@@ -23,7 +23,7 @@
     <if>
       <test serviceAbbrev="cfg"/>
       <then>
-	<!-- cfg crawls plugin registries -->
+	<!-- cfg initiates crawls plugin registries -->
 	<property name="crawler.enabled" value="true"/>
 	<property name="daemon.crawlMode" value="Plugins"/>
       </then>
@@ -39,7 +39,6 @@
     <if>
       <test serviceAbbrev="poller"/>
       <then>
-	<!-- poller crawls other AUs -->
 	<property name="poll.v3.enableV3Poller" value="true"/>
 	<property name="poll.v3.enableV3Voter" value="true"/>
 	<property name="scomm.enabled" value="true"/>
@@ -49,9 +48,9 @@
     <if>
       <test serviceAbbrev="crawler"/>
       <then>
-	<!-- poller crawls other AUs -->
+	<!-- crawler initiates calls for other AUs -->
 	<property name="crawler.enabled" value="true"/>
-	<property name="daemon.crawlMode" value="All"/>
+	<property name="daemon.crawlMode" value="NonPlugins"/>
       </then>
     </if>
 
