@@ -1,0 +1,27 @@
+#!/bin/bash
+
+usage() {
+  echo "eval \$(jprofanv <service_name> <host-port> [<container-port>])"
+  echo "  <service_name>     CFG, REPO, POL, MDX, MDQ, SOAP, CRAWL"
+  echo "  <host_port>        An unused port on the host, for jprofiler to connect to"
+  echo "  <container_port>   Container port, default 8849"
+  exit 2
+}
+
+SVC="$1"
+AGENT=/data/jprofiler13/bin/linux-x64/libjprofilerti.so
+HPORT="${2}"
+CPORT="${3:-8849}"
+
+if [[ -z "${SVC}" ]]; then
+   echo "You must specify a service name"
+   usage
+fi
+if [[ -z "${HPORT}" ]]; then
+   echo "You must specify a host port"
+   usage
+fi
+
+
+echo export ${SVC}_JVM_OPTS_ADDITIONAL=\"-agentpath:${AGENT}=port=${CPORT},nowait\"
+echo export ${SVC}_PORTS_ADDITIONAL=\"jprof:${CPORT}:${HPORT}\"
