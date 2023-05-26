@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# invokes kubectl with -n lockss
+
+kubectl -n lockss $@
