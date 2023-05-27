@@ -19,6 +19,13 @@
 	  <property name="password" value="goodPassword"/>
 	  <property name="dbcp.enabled" value="true"/>
 	</property>
+	<property name="metadataDbManager.datasource">
+	  <property name="className"
+                    value="org.apache.derby.jdbc.ClientDataSource"/>
+	  <property name="portNumber" value="1527"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="dbcp.enabled" value="true"/>
+	</property>
       </then>
     </if>
 
