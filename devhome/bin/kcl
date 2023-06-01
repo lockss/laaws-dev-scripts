@@ -2,4 +2,4 @@
 
 # invokes kubectl with -n lockss
 
-kubectl -n lockss $@
+kubectl $@ -n lockss
