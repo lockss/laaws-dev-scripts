@@ -1,0 +1,54 @@
+#!/bin/bash
+
+usage() {
+  echo usage
+  exit 1
+}
+
+depth=2
+host=localhost
+
+while true ; do
+  case "$1" in
+    "-user" )
+      user="$2"
+      shift; shift; continue;;
+    "-handle" )
+      handle="$2"
+      shift; shift; continue;;
+    "-host" )
+      host="$2"
+      shift; shift; continue;;
+    "-start" )
+      starturl="$2"
+      shift; shift; continue;;
+    "-depth" )
+      depth="$2"
+      shift; shift; continue;;
+    -* )
+      usage
+  esac
+  break;
+done
+
+echo "user: ${user}"
+echo "host: ${host}"
+echo "starturl: ${starturl}"
+
+if [ -z "${user}" -o -z "${handle}" -o -z "${starturl}" ]; then
+  echo "user:pass, handle, and start URL must be provided"
+  usage
+fi
+
+# get AUID
+auid=`curl -s -u "${user}" -X POST --header "Content-Type: application/x-www-form-urlencoded" --header "Accept: application/json" -d "handle=${handle}" "http://${host}:24620/auids" | jq .auid`
+echo "auid: ${auid}"
+
+# configure AU
+# auid is already quoted
+config="{\"auConfig\": {\"handle\": \"${handle}\", \"features\": \"crawledAu\"}, \"auId\": ${auid}}"
+echo "config: ${config}"
+curl -s -u "${user}" -X PUT --header "Content-Type: application/json" --header "Accept: application/json" -d "${config}" "http://${host}:24620/aus/AUID"
+
+# start crawl
+curl -s -u "${user}" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": ${auid}, \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"--span-hosts\":\"false\", \"--page-requisites\": \"true\", \"--no-parent\": \"true\"}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"
