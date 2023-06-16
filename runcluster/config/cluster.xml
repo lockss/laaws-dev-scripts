@@ -51,6 +51,14 @@
 	<!-- crawler initiates calls for other AUs -->
 	<property name="crawler.enabled" value="true"/>
 	<property name="daemon.crawlMode" value="NonPlugins"/>
+	<property name="crawlerservice.pluggableEnabled" value="true"/>
+ 	<property name="crawlerservice.crawlers" value="classic;wget"/>
+ 	<property name="crawlerservice.classic.enabled" value="true"/>
+  <property name="crawlerservice.wget.enabled" value="true"/>
+  <property name="crawlerservice.wget.crawler" value="org.lockss.laaws.crawler.wget.WgetCmdLineCrawler"/>
+  <property name="crawlerservice.wget.successCode" value="0;8"/>
+  <property name="crawlerservice.wget.opt.warc-keep-log" value="off"/>
+  <property name="crawlerservice.wget.wait" value="5"/>
       </then>
     </if>
 
