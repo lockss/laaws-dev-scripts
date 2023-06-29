@@ -1,34 +1,70 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-usage() {
-  echo usage
-  exit 1
-}
+set -Eeuo pipefail
+trap cleanup SIGINT SIGTERM ERR EXIT
 
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
+script_name=$(basename "${BASH_SOURCE[0]}")
+
+# ---- defaults
 depth=2
 host=localhost
 
-while true ; do
+
+usage() {
+  cat <<EOF
+Usage: ${script_name} [-h] --user <user:pass> --handle handle --host hostname --start url(s) --depth depth
+
+Run a single wget crawl using the LOCKSS Crawler Service.
+
+Available options:
+
+-h, --help     Print this help and exit
+    --user     The user:password needed to connect to the crawler service.
+    --handle   The handle to use for generating a AU id.
+    --host     The hostname of the crawler service (default localhost)
+    --start    The url(s) from which the crawl should start: url1(;url2)
+    --depth    The crawl depth (default 2)
+EOF
+  exit
+}
+
+cleanup() {
+  trap - SIGINT SIGTERM ERR EXIT
+  # script cleanup here
+}
+
+msg() {
+  echo >&2 -e "${1-}"
+}
+
+die() {
+  local msg=$1
+  local code=${2-1} # default exit status 1
+  msg "$msg"
+  exit "$code"
+}
+
+while [[ $# -gt 0 ]]; do
   case "$1" in
-    "-user" )
-      user="$2"
-      shift; shift; continue;;
-    "-handle" )
-      handle="$2"
-      shift; shift; continue;;
-    "-host" )
-      host="$2"
-      shift; shift; continue;;
-    "-start" )
-      starturl="$2"
-      shift; shift; continue;;
-    "-depth" )
-      depth="$2"
-      shift; shift; continue;;
-    -* )
-      usage
+  -h | --help) usage ;;
+  "--user")
+    user="${2}"
+    shift; shift; continue;;
+  "--handle")
+    handle="${2}"
+    shift; shift; continue;;
+  "--host" )
+    host="${2}"
+    shift; shift; continue;;
+  "--start" )
+    starturl="${2}"
+    shift; shift; continue;;
+  "--depth" )
+    depth="${2}"
+    shift; shift; continue;;
+  -*) usage
   esac
-  break;
 done
 
 echo "user: ${user}"
@@ -43,12 +79,14 @@ fi
 # get AUID
 auid=`curl -s -u "${user}" -X POST --header "Content-Type: application/x-www-form-urlencoded" --header "Accept: application/json" -d "handle=${handle}" "http://${host}:24620/auids" | jq .auid`
 echo "auid: ${auid}"
+sleep 5
 
 # configure AU
 # auid is already quoted
 config="{\"auConfig\": {\"handle\": \"${handle}\", \"features\": \"crawledAu\"}, \"auId\": ${auid}}"
 echo "config: ${config}"
 curl -s -u "${user}" -X PUT --header "Content-Type: application/json" --header "Accept: application/json" -d "${config}" "http://${host}:24620/aus/AUID"
+sleep 5
 
 # start crawl
 curl -s -u "${user}" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": ${auid}, \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"--span-hosts\":\"false\", \"--page-requisites\": \"true\", \"--no-parent\": \"true\"}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"
