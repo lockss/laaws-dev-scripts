@@ -8,13 +8,14 @@
   <property name="org.lockss.platform">
 
     <property name="version" value="runcluster-6" />
-    <property name="tmpDir" value="data/temp" />
+<!--     <property name="tmpDir" value="data/temp" /> -->
     <property name="logdirectory" value="logs" />
 
     <if>
       <test serviceAbbrev="cfg"/>
       <then>
 	<property name="diskSpacePaths" value="./data/cfg-files"/>
+	<property name="tmpDir" value="./data/cfg-tmp"/>
       </then>
     </if>
 
@@ -22,7 +23,7 @@
       <test serviceAbbrev="repo"/>
       <then>
 	<property name="diskSpacePaths" value="./data/repo-files"/>
-
+	<property name="tmpDir" value="./data/repo-tmp"/>
       </then>
     </if>
 
@@ -30,6 +31,7 @@
       <test serviceAbbrev="poller"/>
       <then>
 	<property name="diskSpacePaths" value="./data/poller-files"/>
+	<property name="tmpDir" value="./data/poller-tmp"/>
       </then>
     </if>
 
@@ -37,6 +39,7 @@
       <test serviceAbbrev="crawler"/>
       <then>
 	<property name="diskSpacePaths" value="./data/crawler-files"/>
+	<property name="tmpDir" value="./data/crawler-tmp"/>
       </then>
     </if>
 
@@ -44,6 +47,7 @@
       <test serviceAbbrev="mdx"/>
       <then>
 	<property name="diskSpacePaths" value="./data/mdx-files"/>
+	<property name="tmpDir" value="./data/mdx-tmp"/>
       </then>
     </if>
 
@@ -51,6 +55,7 @@
       <test serviceAbbrev="mdq"/>
       <then>
 	<property name="diskSpacePaths" value="./data/mdq-files"/>
+	<property name="tmpDir" value="./data/mdq-tmp"/>
       </then>
     </if>
 
