@@ -6,7 +6,7 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 script_name=$(basename "${BASH_SOURCE[0]}")
 
 # ---- defaults
-depth=2
+depth=99
 host=localhost
 
 
@@ -23,7 +23,7 @@ Available options:
     --handle   The handle to use for generating a AU id.
     --host     The hostname of the crawler service (default localhost)
     --start    The url(s) from which the crawl should start: url1(;url2)
-    --depth    The crawl depth (default 2)
+    --depth    The crawl depth (default 99)
 EOF
   exit
 }
