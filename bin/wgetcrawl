@@ -9,7 +9,6 @@ script_name=$(basename "${BASH_SOURCE[0]}")
 depth=99
 host=localhost
 
-
 usage() {
   cat <<EOF
 Usage: ${script_name} [-h] --user <user:pass> --handle handle --host hostname --start url(s) --depth depth
@@ -66,26 +65,74 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo "user: ${user}"
-echo "host: ${host}"
-echo "starturl: ${starturl}"
-
 if [ -z "${user}" -o -z "${handle}" -o -z "${starturl}" ]; then
   echo "user:pass, handle, and start URL must be provided"
   usage
 fi
 
-# get AUID
-auid=`curl -s -u "${user}" -X POST --header "Content-Type: application/x-www-form-urlencoded" --header "Accept: application/json" -d "handle=${handle}" "http://${host}:24620/auids" | jq .auid`
-echo "auid: ${auid}"
-sleep 5
+#echo "user: ${user}"
+echo "host: ${host}"
+echo "starturl: ${starturl}"
 
-# configure AU
-# auid is already quoted
-config="{\"auConfig\": {\"handle\": \"${handle}\", \"features\": \"crawledAu\"}, \"auId\": ${auid}}"
-echo "config: ${config}"
-curl -s -u "${user}" -X PUT --header "Content-Type: application/json" --header "Accept: application/json" -d "${config}" "http://${host}:24620/aus/AUID"
-sleep 5
+curlcmd="curl -s -S -u ${user}"
+
+err_exit() {
+  echo "$1" >&2
+  exit 1
+}
+
+url_encode() {
+  python3 -c "import urllib.parse; print (urllib.parse.quote('''$1'''))"
+}
+
+is_svc_ready() {
+  local port="$1"
+  local api_status=`( ${curlcmd} -X GET --header 'Accept: application/json' "http://${host}:${port}/status" ) || err_exit "Couldn't get service status"`
+  echo "${api_status}" | jq -r .startupStatus | grep -q AUS_STARTED
+}
+
+wait_svc_ready() {
+  local port="$1"
+  local svc_name="$2"
+  local did=""
+  while ! is_svc_ready "${port}"; do
+    if [ -z "${did}" ]; then
+      echo -n "Waiting for ${svc_name} to be ready ..."
+      did=1
+    fi
+    sleep 5
+  done
+  if [ -n "${did}" ]; then
+    echo " done."
+  fi
+}
+
+is_au_configured() {
+  local auid="$1"
+  local encoded_auid="`url_encode ${auid}`"
+  local cur_config=`( ${curlcmd} -X GET --header 'Accept: application/json' "http://${host}:24620/aus/${encoded_auid}" ) || err_exit "Couldn't check current AU config"`
+  echo "${cur_config}" | grep -q auId
+}
+
+wait_svc_ready 24620 "Config Service"
+wait_svc_ready 24620 "Crawler Service"
+
+# get AUID
+auid=`${curlcmd} -X POST --header "Content-Type: application/x-www-form-urlencoded" --header "Accept: application/json" --data-urlencode "handle=${handle}" "http://${host}:24620/auids" | jq -r .auid`
+echo "auid: ${auid}"
+
+if ! is_au_configured "${auid}"; then
+  # configure AU
+  config="{\"auConfig\": {\"handle\": \"${handle}\", \"features\": \"crawledAu\"}, \"auId\": \"${auid}\"}"
+  ${curlcmd} -X PUT --header "Content-Type: application/json" --header "Accept: application/json" -d "${config}" "http://${host}:24620/aus/AUID"
+  sleep 5
+else
+  echo "AU already configured"
+fi
 
 # start crawl
-curl -s -u "${user}" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": ${auid}, \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"--span-hosts\":\"false\", \"--page-requisites\": \"true\", \"--no-parent\": \"true\"}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"
+if ${curlcmd} -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": \"${auid}\", \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"--span-hosts\":\"false\", \"--page-requisites\": \"true\", \"--no-parent\": \"true\"}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"; then
+  echo "Crawl requested"
+else
+  echo "Crawl request failed"
+fi
