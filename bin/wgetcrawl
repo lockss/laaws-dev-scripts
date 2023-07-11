@@ -115,7 +115,7 @@ is_au_configured() {
 }
 
 wait_svc_ready 24620 "Config Service"
-wait_svc_ready 24620 "Crawler Service"
+wait_svc_ready 24660 "Crawler Service"
 
 # get AUID
 auid=`${curlcmd} -X POST --header "Content-Type: application/x-www-form-urlencoded" --header "Accept: application/json" --data-urlencode "handle=${handle}" "http://${host}:24620/auids" | jq -r .auid`
