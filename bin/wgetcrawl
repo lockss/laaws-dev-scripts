@@ -131,7 +131,7 @@ else
 fi
 
 # start crawl
-if ${curlcmd} -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": \"${auid}\", \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"--span-hosts\":\"false\", \"--page-requisites\": \"true\", \"--no-parent\": \"true\"}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"; then
+if ${curlcmd} -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": \"${auid}\", \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"span-hosts\":false, \"page-requisites\": true, \"no-parent\": true}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"; then
   echo "Crawl requested"
 else
   echo "Crawl request failed"
