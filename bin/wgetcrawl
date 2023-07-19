@@ -7,11 +7,12 @@ script_name=$(basename "${BASH_SOURCE[0]}")
 
 # ---- defaults
 depth=99
+wait=""
 host=localhost
 
 usage() {
   cat <<EOF
-Usage: ${script_name} [-h] --user <user:pass> --handle handle --host hostname --start url(s) --depth depth
+Usage: ${script_name} [-h] --user <user:pass> --handle handle --host hostname --start url(s) --depth depth --wait msecs
 
 Run a single wget crawl using the LOCKSS Crawler Service.
 
@@ -23,6 +24,8 @@ Available options:
     --host     The hostname of the crawler service (default localhost)
     --start    The url(s) from which the crawl should start: url1(;url2)
     --depth    The crawl depth (default 99)
+    --wait     The number of milliseconds to wait between fetches.
+               (Default from system config, which defaults to 3 seconds.)
 EOF
   exit
 }
@@ -60,6 +63,9 @@ while [[ $# -gt 0 ]]; do
     shift; shift; continue;;
   "--depth" )
     depth="${2}"
+    shift; shift; continue;;
+  "--wait" )
+    wait="${2}"
     shift; shift; continue;;
   -*) usage
   esac
@@ -131,8 +137,10 @@ else
 fi
 
 # start crawl
-if ${curlcmd} -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": \"${auid}\", \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"span-hosts\":false, \"page-requisites\": true, \"no-parent\": true}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"; then
+if ${curlcmd} -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": \"${auid}\", \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"span-hosts\":false, \"page-requisites\": true, \"no-parent\": true, \"wait\":\"${wait}\"}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"; then
+  echo
   echo "Crawl requested"
 else
+  echo
   echo "Crawl request failed"
 fi
