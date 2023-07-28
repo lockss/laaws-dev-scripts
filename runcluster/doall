@@ -236,7 +236,7 @@ start_service() {
   local name_arg="--${svc_name}--"
   local data_dir="./data/${svc_name}-files"
   mkdir -p ${data_dir}
-  local cfgsvc_args="-c http://localhost:24620 -l http://localhost:24620/config/file/cluster"
+  local cfgsvc_args="-c http://localhost:24620 -l http://localhost:24620/config/file/cluster -l http://localhost:24620/config/file/user-config"
   local local_props_args=
   # credentials file is overwritten and deleted when used, so must create
   # one for each service
