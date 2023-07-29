@@ -11,6 +11,7 @@ crawl_port=24660
 
 # ---- defaults
 host=localhost
+proxyarg=""
 depth=99
 wait=""
 cancelJobId=""
@@ -26,6 +27,7 @@ Available options:
 -h, --help                  Print this help and exit
     --host <hostname>       Crawler service hostname (default localhost)
     --user <user:password>  Crawler service REST request credentials
+    --proxy <host:port>     Proxy through host:port
     --handle <handle>       Named AU handle
     --start <url[;url1;...]> (List of) url(s) from which to start crawling
     --depth <n>             The crawl depth (default 99)
@@ -63,6 +65,9 @@ while [[ $# -gt 0 ]]; do
   "--user")
     user="${2}"
     shift; shift; continue;;
+  "--proxy")
+    proxyarg="--proxy ${2}"
+    shift; shift; continue;;
   "--handle")
     handle="${2}"
     shift; shift; continue;;
@@ -91,7 +96,7 @@ fi
 #echo "host: ${host}"
 #echo "starturl: ${starturl}"
 
-curlcmd="curl -s -S -u ${user}"
+curlcmd="curl -s -S -u ${user} ${proxyarg}"
 
 err_exit() {
   echo "$1" >&2
