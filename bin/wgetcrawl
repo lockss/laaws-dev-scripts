@@ -179,7 +179,7 @@ msg=`echo "${jobStatus}" | jq -r .msg`
 #echo "jobStatus: ${jobStatus}"
 #echo "statusCode: ${statusCode}"
 #echo "msg: ${msg}"
-if [ "${http_status}" = 200 ]; then
+if [[ "${http_status}" == 2** ]]; then
   jobId=`cat ${tmpfile} | jq -r .jobId`
   echo "Crawl queued, jobId: ${jobId}"
 else
