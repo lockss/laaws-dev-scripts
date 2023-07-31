@@ -59,9 +59,9 @@
  	<property name="crawlerservice.wget.successCode" value="0;8"/>
  	<property name="crawlerservice.wget.outputLevel" value="no-verbose"/>
  	<property name="crawlerservice.wget.opt.warc-keep-log" value="off"/>
- 	<property name="crawlerservice.wget.opt.content-on-error" value="off"/>
  	<property name="crawlerservice.wget.outputLogLevel" value="debug"/>
  	<property name="crawlerservice.wget.errorLogLevel" value="debug"/>
+    <property name="crawlerservice.wget.opt.no-warc-compression" value="off" />
       </then>
     </if>
 
