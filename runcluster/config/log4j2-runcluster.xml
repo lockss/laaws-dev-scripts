@@ -7,8 +7,8 @@
     <Property name="log.dir">$${env:LOCKSS_LOG_DIR}</Property>
     <Property name="log.file">$${env:LOCKSS_SERVICE_NAME:-daemon}</Property>
 
-    <!-- roll over at 10MB, keep five old versions -->
-    <Property name="log.rollingfile.sizetrigger">20 MB</Property>
+    <!-- roll over at 50MB, keep five old versions -->
+    <Property name="log.rollingfile.sizetrigger">50 MB</Property>
     <Property name="log.rollingfile.maxrollover">5</Property>
 
     <!-- log only FATAL messages to console -->

@@ -5,31 +5,44 @@ trap cleanup SIGINT SIGTERM ERR EXIT
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 script_name=$(basename "${BASH_SOURCE[0]}")
 
+# ---- constants
+cfg_port=24620
+crawl_port=24660
+
 # ---- defaults
-depth=99
 host=localhost
+proxyarg=""
+depth=99
+wait=""
+cancelJobId=""
 
 usage() {
   cat <<EOF
-Usage: ${script_name} [-h] --user <user:pass> --handle handle --host hostname --start url(s) --depth depth
+Usage: ${script_name} [-h] --user <user:pass> --handle handle --host hostname --start url(s) --depth depth --wait msecs
 
 Run a single wget crawl using the LOCKSS Crawler Service.
 
 Available options:
 
--h, --help     Print this help and exit
-    --user     The user:password needed to connect to the crawler service.
-    --handle   The handle to use for generating a AU id.
-    --host     The hostname of the crawler service (default localhost)
-    --start    The url(s) from which the crawl should start: url1(;url2)
-    --depth    The crawl depth (default 99)
+-h, --help                  Print this help and exit
+    --host <hostname>       Crawler service hostname (default localhost)
+    --user <user:password>  Crawler service REST request credentials
+    --proxy <host:port>     Proxy through host:port
+    --handle <handle>       Named AU handle
+    --start <url[;url1;...]> (List of) url(s) from which to start crawling
+    --depth <n>             The crawl depth (default 99)
+    --wait <msec>           Delay between fetches (milliseconds.  (Default
+                            from system config, which defaults to 3 seconds.)
+    --cancel <jobId>        Cancel a running or queued crawl
 EOF
   exit
 }
 
 cleanup() {
   trap - SIGINT SIGTERM ERR EXIT
-  # script cleanup here
+  if [ -f "${tmpfile}" ]; then
+    rm -f "${tmpfile}"
+  fi
 }
 
 msg() {
@@ -46,14 +59,17 @@ die() {
 while [[ $# -gt 0 ]]; do
   case "$1" in
   -h | --help) usage ;;
+  "--host" )
+    host="${2}"
+    shift; shift; continue;;
   "--user")
     user="${2}"
     shift; shift; continue;;
+  "--proxy")
+    proxyarg="--proxy ${2}"
+    shift; shift; continue;;
   "--handle")
     handle="${2}"
-    shift; shift; continue;;
-  "--host" )
-    host="${2}"
     shift; shift; continue;;
   "--start" )
     starturl="${2}"
@@ -61,20 +77,26 @@ while [[ $# -gt 0 ]]; do
   "--depth" )
     depth="${2}"
     shift; shift; continue;;
+  "--wait" )
+    wait="${2}"
+    shift; shift; continue;;
+  "--cancel" )
+    cancelJobId="${2}"
+    shift; shift; continue;;
   -*) usage
   esac
 done
 
-if [ -z "${user}" -o -z "${handle}" -o -z "${starturl}" ]; then
-  echo "user:pass, handle, and start URL must be provided"
+if [ -z "${user}" -o \( -z "${cancelJobId}" -a \( -z "${handle}" -o -z "${starturl}" \) \) ]; then
+  echo "user:pass, and either cancel jobid or handle, and start URL must be provided"
   usage
 fi
 
 #echo "user: ${user}"
-echo "host: ${host}"
-echo "starturl: ${starturl}"
+#echo "host: ${host}"
+#echo "starturl: ${starturl}"
 
-curlcmd="curl -s -S -u ${user}"
+curlcmd="curl -s -S -u ${user} ${proxyarg}"
 
 err_exit() {
   echo "$1" >&2
@@ -110,29 +132,59 @@ wait_svc_ready() {
 is_au_configured() {
   local auid="$1"
   local encoded_auid="`url_encode ${auid}`"
-  local cur_config=`( ${curlcmd} -X GET --header 'Accept: application/json' "http://${host}:24620/aus/${encoded_auid}" ) || err_exit "Couldn't check current AU config"`
+  local cur_config=`( ${curlcmd} -X GET --header 'Accept: application/json' "http://${host}:${cfg_port}/aus/${encoded_auid}" ) || err_exit "Couldn't check current AU config"`
   echo "${cur_config}" | grep -q auId
 }
 
-wait_svc_ready 24620 "Config Service"
-wait_svc_ready 24660 "Crawler Service"
+wait_svc_ready ${cfg_port} "Config Service"
+wait_svc_ready ${crawl_port} "Crawler Service"
+
+if [ -n "${cancelJobId}" ]; then
+  echo "Cancelling job: ${cancelJobId}"
+  tmpfile=$(mktemp /tmp/crawlreq.XXXXXX)
+  http_status=`${curlcmd} -o ${tmpfile} -w "%{http_code}" -X DELETE --header "Accept: application/json" "http://${host}:${crawl_port}/crawls/${cancelJobId}"`
+  echo "delete response: `cat ${tmpfile}`"
+  echo "http_status: ${http_status}"
+  rm -f "${tmpfile}"
+  exit 0
+fi
 
 # get AUID
-auid=`${curlcmd} -X POST --header "Content-Type: application/x-www-form-urlencoded" --header "Accept: application/json" --data-urlencode "handle=${handle}" "http://${host}:24620/auids" | jq -r .auid`
+auid=`${curlcmd} -X POST --header "Content-Type: application/x-www-form-urlencoded" --header "Accept: application/json" --data-urlencode "handle=${handle}" "http://${host}:${cfg_port}/auids" | jq -r .auid`
 echo "auid: ${auid}"
 
 if ! is_au_configured "${auid}"; then
   # configure AU
   config="{\"auConfig\": {\"handle\": \"${handle}\", \"features\": \"crawledAu\"}, \"auId\": \"${auid}\"}"
-  ${curlcmd} -X PUT --header "Content-Type: application/json" --header "Accept: application/json" -d "${config}" "http://${host}:24620/aus/AUID"
+  ${curlcmd} -X PUT --header "Content-Type: application/json" --header "Accept: application/json" -d "${config}" "http://${host}:${cfg_port}/aus/AUID"
+  echo "AU created; requesting wget crawl ..."
   sleep 5
 else
-  echo "AU already configured"
+  echo "AU already exists; requesting wget crawl ..."
 fi
 
 # start crawl
-if ${curlcmd} -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": \"${auid}\", \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"--span-hosts\":\"false\", \"--page-requisites\": \"true\", \"--no-parent\": \"true\"}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:24660/jobs"; then
-  echo "Crawl requested"
-else
-  echo "Crawl request failed"
+tmpfile=$(mktemp /tmp/crawlreq.XXXXXX)
+
+http_status=`${curlcmd} -o ${tmpfile} -w "%{http_code}" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{\"auId\": \"${auid}\", \"crawlDepth\":${depth}, \"crawlKind\": \"newContent\", \"crawlList\":[\"${starturl}\"], \"crawlerId\": \"wget\", \"extraCrawlerData\": {\"span-hosts\":false, \"page-requisites\": true, \"no-parent\": true, \"wait\":\"${wait}\"}, \"forceCrawl\": false, \"priority\":0, \"refetchDepth\":0}" "http://${host}:${crawl_port}/jobs"`
+exitcode=$?
+#echo "http_status: ${http_status}"
+if [ "${exitcode}" != 0 ]; then
+  echo "curl exited with status ${exitcode}"
+  exit 1
 fi
+jobStatus=`cat ${tmpfile} | jq -r .jobStatus`
+statusCode=`echo "${jobStatus}" | jq -r .statusCode`
+msg=`echo "${jobStatus}" | jq -r .msg`
+#echo "jobStatus: ${jobStatus}"
+#echo "statusCode: ${statusCode}"
+#echo "msg: ${msg}"
+if [[ "${http_status}" == 2** ]]; then
+  jobId=`cat ${tmpfile} | jq -r .jobId`
+  echo "Crawl queued, jobId: ${jobId}"
+else
+  echo "Request was rejected with ${statusCode}: ${msg}"
+  exit 0
+fi
+rm "${tmpfile}"
+exit 0

@@ -20,6 +20,9 @@
 	      value="publisher;provider"/>
     <property name="metadataManager.indexing_enabled" value="true"/>
 
+    <!-- Default, overridden in specific service -->
+    <property name="daemon.crawlMode" value="None"/>
+
     <if>
       <test serviceAbbrev="cfg"/>
       <then>
