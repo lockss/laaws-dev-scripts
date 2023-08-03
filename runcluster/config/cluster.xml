@@ -66,7 +66,7 @@
  	<property name="crawlerservice.wget.errorLogLevel" value="debug"/>
  	<property name="crawlerservice.wget.compressedWarcExt" value=".warc.gz"/>
  	<property name="crawlerservice.wget.uncompressedWarcExt" value=".warc"/>
-  <property name="crawlerservice.wget.compressWarc" value="false" />
+  <property name="crawlerservice.wget.preferCompressedWarc" value="true" />
       </then>
     </if>
 
