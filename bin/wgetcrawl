@@ -15,6 +15,7 @@ proxyarg=""
 depth=99
 wait=""
 cancelJobId=""
+verbose=""
 
 usage() {
   cat <<EOF
@@ -34,6 +35,7 @@ Available options:
     --wait <msec>           Delay between fetches (milliseconds.  (Default
                             from system config, which defaults to 3 seconds.)
     --cancel <jobId>        Cancel a running or queued crawl
+    --verbose               Invoke curl with --verbose
 EOF
   exit
 }
@@ -83,6 +85,9 @@ while [[ $# -gt 0 ]]; do
   "--cancel" )
     cancelJobId="${2}"
     shift; shift; continue;;
+  "--verbose" )
+    version="--verbose"
+    shift; continue;;
   -*) usage
   esac
 done
@@ -96,7 +101,7 @@ fi
 #echo "host: ${host}"
 #echo "starturl: ${starturl}"
 
-curlcmd="curl -s -S -u ${user} ${proxyarg}"
+curlcmd="curl ${verbose} -s -S -u ${user} ${proxyarg}"
 
 err_exit() {
   echo "$1" >&2
