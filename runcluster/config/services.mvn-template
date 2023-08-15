@@ -12,3 +12,4 @@ crawler=mvn:org.lockss.laaws:laaws-crawler-service:${artver:org.lockss.laaws:laa
 #mdx=mvn:org.lockss.laaws:laaws-metadata-extraction-service:${artver:org.lockss.laaws:laaws-metadata-extraction-service}
 #mdq=mvn:org.lockss.laaws:laaws-metadata-service:${artver:org.lockss.laaws:laaws-metadata-service}
 #soap=mvn:org.lockss.laaws:laaws-soap-service:${artver:org.lockss.laaws:laaws-soap-service}
+solr=solr:8.11.2
