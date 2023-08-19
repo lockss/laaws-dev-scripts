@@ -1,0 +1,6 @@
+# hack to perform all the steps to upgrade a machine to a branch or tag
+
+gitref="$1"
+relname=`echo "${gitref}" | sed -r -e "s/^.*-([^-]+)/\1/"`
+
+git pull ; git checkout "${gitref}" ; ./scripts/stop-lockss ; ./scripts/configure-lockss -r ; ./scripts/upgrades/upgrade-to-${relname} ; ./scripts/start-lockss
