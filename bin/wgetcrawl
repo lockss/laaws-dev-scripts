@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Example of the REST calls to create an AU suitable for a wget crawl
+# and invoke the wget crawler.  Invoke with -h for options.
+
+
 trap cleanup SIGINT SIGTERM ERR EXIT
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
@@ -19,19 +23,22 @@ verbose=""
 
 usage() {
   cat <<EOF
-Usage: ${script_name} [-h] --user <user:pass> --handle handle --host hostname --start url(s) --depth depth --wait msecs
+Usage:
+  ${script_name} [-h] [--host <hostname?] --user <user:pass> --handle <handle> --start <url(s)> [--proxy <host:port>] [--depth <depth>] [--wait <msecs>] [--verbose]
+    or
+  ${script_name} --cancel <jobId>
 
-Run a single wget crawl using the LOCKSS Crawler Service.
+Run (or cancel) a single wget crawl using the LOCKSS Crawler Service.
 
 Available options:
 
 -h, --help                  Print this help and exit
     --host <hostname>       Crawler service hostname (default localhost)
-    --user <user:password>  Crawler service REST request credentials
-    --proxy <host:port>     Proxy through host:port
     --handle <handle>       Named AU handle
+    --user <user:password>  Crawler service REST request credentials
     --start <url[;url1;...]> (List of) url(s) from which to start crawling
-    --depth <n>             The crawl depth (default 99)
+    --proxy <host:port>     Proxy through host:port
+    --depth <depth>         The depth to which to follow links (default 99)
     --wait <msec>           Delay between fetches (milliseconds.  (Default
                             from system config, which defaults to 3 seconds.)
     --cancel <jobId>        Cancel a running or queued crawl
@@ -86,7 +93,10 @@ while [[ $# -gt 0 ]]; do
     cancelJobId="${2}"
     shift; shift; continue;;
   "--verbose" )
-    version="--verbose"
+    verbose="--verbose"
+    shift; continue;;
+  "--trace" )
+    verbose="--trace-ascii /tmp/foo"
     shift; continue;;
   -*) usage
   esac
