@@ -65,6 +65,25 @@ die() {
   exit "$code"
 }
 
+convert_to_fractional_seconds () {
+   local input=$1
+   re='^[0-9]+$'
+   if ! [[ $input =~ $re ]] ; then
+       case $input in
+         *[Dd]) factor=86400 ;;
+         *[Hh]) factor=3600 ;;
+         *[Mm]) factor=60 ;;
+         *[Ss]) factor=1 ;;
+         *) echo "Invalid input:$input" >&2; exit 1;;
+     esac
+    echo $(echo "scale=2; ${input%?}*$factor" | bc)
+  else
+     factor=0.001
+   echo $(echo "scale=2; ${input}*$factor" | bc)
+   fi
+ }
+
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
   -h | --help) usage ;;
@@ -87,7 +106,7 @@ while [[ $# -gt 0 ]]; do
     depth="${2}"
     shift; shift; continue;;
   "--wait" )
-    wait="${2}"
+    wait=$(convert_to_fractional_seconds "${2}")
     shift; shift; continue;;
   "--cancel" )
     cancelJobId="${2}"
@@ -121,6 +140,7 @@ err_exit() {
 url_encode() {
   python3 -c "import urllib.parse; print (urllib.parse.quote('''$1'''))"
 }
+
 
 is_svc_ready() {
   local port="$1"
