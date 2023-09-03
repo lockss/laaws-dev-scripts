@@ -10,18 +10,37 @@
 
 
 gitref="$1"
+shift
 case "$gitref" in
   "master" )
-    relname="$2"
+    relname="$1"
     if [ -z "$relname" ]; then
       echo "upgradeto master requires 2nd arg be the name of the release (e.g., alpha7)"
       exit 1
     fi
+    shift
     ;;
   * )
     relname=`echo "${gitref}" | sed -r -e "s/^.*-([^-]+)/\1/"`
     ;;
 esac
+
+startargs=""
+
+while [ -n "$1" ]; do
+  case "$1" in
+    "-u" )
+      startargs="${startargs} -u"
+      shift; continue ;;
+    "-w" )
+      startargs="${startargs} -w"
+      shift; continue ;;
+    * )
+      echo "Invalid option: $1"
+      exit 1
+      ;;
+  esac
+done
 
 # switch to master (in case currently at a tag)
 # pull (in case needed to discover new branch(es)
@@ -32,4 +51,4 @@ esac
 # run upgrade script
 # start lockss
 
-git checkout master && git pull && git checkout "${gitref}" && git pull && ./scripts/stop-lockss && ./scripts/configure-lockss -r && ./scripts/upgrades/upgrade-to-${relname} && ./scripts/start-lockss
+git checkout master && git pull && git checkout "${gitref}" && git pull && ./scripts/stop-lockss && ./scripts/configure-lockss -r && ./scripts/upgrades/upgrade-to-${relname} && ./scripts/start-lockss ${startargs}
