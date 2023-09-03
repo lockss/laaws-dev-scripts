@@ -1,6 +1,35 @@
+#!/bin/sh
+
 # hack to perform all the steps to upgrade a machine to a branch or tag
 
-gitref="$1"
-relname=`echo "${gitref}" | sed -r -e "s/^.*-([^-]+)/\1/"`
+# upgradeto <release-tag>
+#   e.g., upgradeto release-2.0.71-alpha7
+#  or
+# upgradeto master <release-name>
+#   e.g., upgradeto master alpha7
 
-git pull ; git checkout "${gitref}" ; ./scripts/stop-lockss ; ./scripts/configure-lockss -r ; ./scripts/upgrades/upgrade-to-${relname} ; ./scripts/start-lockss
+
+gitref="$1"
+case "$gitref" in
+  "master" )
+    relname="$2"
+    if [ -z "$relname" ]; then
+      echo "upgradeto master requires 2nd arg be the name of the release (e.g., alpha7)"
+      exit 1
+    fi
+    ;;
+  * )
+    relname=`echo "${gitref}" | sed -r -e "s/^.*-([^-]+)/\1/"`
+    ;;
+esac
+
+# switch to master (in case currently at a tag)
+# pull (in case needed to discover new branch(es)
+# switch to desired branch/tag
+# pull again (not needed? what if gitref is tag?)
+# stop lockss
+# configure -r
+# run upgrade script
+# start lockss
+
+git checkout master && git pull && git checkout "${gitref}" && git pull && ./scripts/stop-lockss && ./scripts/configure-lockss -r && ./scripts/upgrades/upgrade-to-${relname} && ./scripts/start-lockss
