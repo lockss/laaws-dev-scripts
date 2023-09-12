@@ -17,7 +17,6 @@ usage() {
   echo "               locally built service jars)"
   echo "  -pg          Use external PostgreSQL database"
   echo "  -derby       Use embedded Derby database (default)"
-  echo "  -java <path> Specify path to Java 8 executable"
   echo "  -volatile    Use use a volatile artifact index"
   echo "  -dispatching Use use a dispatching artifact index"
   echo "  -solr <url>  Use Solr, start and stop with other services"
@@ -40,6 +39,9 @@ usage() {
 
   echo "  -a <app_arg> Add <app_arg> to command line"
   echo "  -s name:<credentials_file> Load Rest client credentials from file"
+  echo "  -java <path> Specify path to Java executable"
+  echo "  -8           Use Java at JAVA_8_HOME/bin"
+  echo "  -11          Use Java at JAVA_11_HOME/bin"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
   echo "  -U           Force maven to check for updated artifacts"
@@ -437,6 +439,28 @@ while true ; do
     -java )
       java_bin="$2"
       shift; shift; continue ;;
+    "-8" )
+      if [ -z "$JAVA_8_HOME" ] ; then
+	echo "-8 option requires JAVA_8_HOME to point to Java 8 install dir"
+	exit 1;
+      fi
+      JAVA_HOME="${JAVA_8_HOME}"
+      export JAVA_HOME
+      PATH="$JAVA_HOME/bin:$PATH"
+      export PATH
+      echo JAVA_HOME="$JAVA_HOME"
+      shift; continue;;
+    "-11" )
+      if [ -z "$JAVA_11_HOME" ] ; then
+	echo "-11 option requires JAVA_11_HOME to point to Java 11 install dir"
+	exit 1;
+      fi
+      JAVA_HOME="${JAVA_11_HOME}"
+      export JAVA_HOME
+      PATH="$JAVA_HOME/bin:$PATH"
+      export PATH
+      echo JAVA_HOME="$JAVA_HOME"
+      shift; continue;;
     -volatile )
       volatile_index=1
       shift; continue ;;
