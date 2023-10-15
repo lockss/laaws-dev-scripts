@@ -322,7 +322,7 @@ start_service() {
 
 #       echo "repo.spec=local:${repo_data}" > ${repo_config}
 #       echo "repo.persistIndexName=localindex.ser" >> ${repo_config}
-      extra_args="--spring.config.location=file:${repo_config}"
+      extra_args="--spring.config.location=classpath:/application.properties,file:${repo_config}"
       ;;
     solr )
       if is_start_solr; then
