@@ -511,6 +511,9 @@ while true ; do
     -mvnarg )
       mvn_args="${mvn_args} $2"
       shift; shift; continue ;;
+    -a )
+      other_args="$other_args $2"
+      shift; shift; continue ;;
     -a | -g | -s | -x )
       other_args="$other_args $1 $2"
       shift; shift; continue ;;
