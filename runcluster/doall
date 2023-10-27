@@ -14,6 +14,7 @@ usage() {
   echo "  -svcs <file> Use alternate services file (default config/services.snapshot,"
   echo "               which runs SNAPSHOT artifacts downloaded from maven central)"
   echo "  -local       Synonym for -svcs config/services.local (which runs"
+  echo "               locally built service jars)"
   echo "  -release     Synonym for -svcs config/services.release (which runs"
   echo "               the most recent release service jars)"
   echo "  -pg          Use external PostgreSQL database"
