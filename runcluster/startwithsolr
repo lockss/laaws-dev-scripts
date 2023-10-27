@@ -1,0 +1,1 @@
+./start -dispatching -solr http://localhost:8983/solr -solrCollection lockss-repo $@
