@@ -14,7 +14,8 @@ usage() {
   echo "  -svcs <file> Use alternate services file (default config/services.snapshot,"
   echo "               which runs SNAPSHOT artifacts downloaded from maven central)"
   echo "  -local       Synonym for -svcs config/services.local (which runs"
-  echo "               locally built service jars)"
+  echo "  -release     Synonym for -svcs config/services.release (which runs"
+  echo "               the most recent release service jars)"
   echo "  -pg          Use external PostgreSQL database"
   echo "  -derby       Use embedded Derby database (default)"
   echo "  -volatile    Use use a volatile artifact index"
@@ -75,6 +76,7 @@ l4j_xml=config/log4j2-runcluster.xml
 # defaults
 svcs_file="./config/services.snapshot"
 svcs_file_local="./config/services.local"
+svcs_file_release="./config/services.release"
 forcekill=
 testing=
 repo_dirs=default
@@ -420,6 +422,9 @@ while true ; do
       shift; shift; continue ;;
     "-local" )
       svcs_file="${svcs_file_local}"
+      shift; continue ;;
+    "-release" )
+      svcs_file="${svcs_file_release}"
       shift; continue ;;
     "-p" )
       pln_props="$2"
