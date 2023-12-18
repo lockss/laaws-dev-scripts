@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# pull all projects, build clean, build & install lockss-parent-pom,
+# build & install all projects.
+
+# if MVN is set, use it as command name (& args)
+if [ -z "${MVN}" ]; then
+  MVN=mvn
+fi
+
+bin/foreach git pull && ${MVN} clean && ( cd lockss-parent-pom && ${MVN} install ) && ${MVN} install -DskipTests=true
