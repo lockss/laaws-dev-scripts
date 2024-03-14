@@ -44,6 +44,7 @@ usage() {
   echo "  -java <path> Specify path to Java executable"
   echo "  -8           Use Java at JAVA_8_HOME/bin"
   echo "  -11          Use Java at JAVA_11_HOME/bin"
+  echo "  -17          Use Java at JAVA_17_HOME/bin"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
   echo "  -U           Force maven to check for updated artifacts"
@@ -462,6 +463,17 @@ while true ; do
 	exit 1;
       fi
       JAVA_HOME="${JAVA_11_HOME}"
+      export JAVA_HOME
+      PATH="$JAVA_HOME/bin:$PATH"
+      export PATH
+      echo JAVA_HOME="$JAVA_HOME"
+      shift; continue;;
+    "-17" )
+      if [ -z "$JAVA_17_HOME" ] ; then
+	echo "-17 option requires JAVA_17_HOME to point to Java 17 install dir"
+	exit 1;
+      fi
+      JAVA_HOME="${JAVA_17_HOME}"
       export JAVA_HOME
       PATH="$JAVA_HOME/bin:$PATH"
       export PATH
