@@ -478,6 +478,8 @@ while true ; do
       PATH="$JAVA_HOME/bin:$PATH"
       export PATH
       echo JAVA_HOME="$JAVA_HOME"
+      # Java 17 needs --add-opens for reflection
+      java_args="${java_args} --add-opens java.base/java.util=ALL-UNNAMED"
       shift; continue;;
     -volatile )
       volatile_index=1
