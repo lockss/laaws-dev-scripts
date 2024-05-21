@@ -44,6 +44,16 @@
 <!--      <property name="serverName" value="localhost"/> -->
 <!-- 	  <property name="portNumber" value="5432"/> -->
 	</property>
+	<property name="sqlArtifactIndexDbManager.datasource">
+	  <property name="className"
+		    value="org.postgresql.ds.PGSimpleDataSource"/>
+	  <property name="password" value="goodPassword"/>
+	  <property name="schemaName" value="LOCKSS"/>
+	  <property name="dbcp.enabled" value="true"/>
+<!-- 	  <property name="user" value="postgres"/> -->
+<!--      <property name="serverName" value="localhost"/> -->
+<!-- 	  <property name="portNumber" value="5432"/> -->
+	</property>
       </then>
     </if>
 

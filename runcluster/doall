@@ -86,6 +86,8 @@ db_props=config/derby.xml
 max_warc_size=100000000
 volatile_index=
 dispatching_index=
+enable_pgsql=
+enable_derby=
 solr_baseurl=
 start_solr=
 solr_collection="lockss-repo"
@@ -306,6 +308,12 @@ start_service() {
         echo "repo.index.spec=dispatching" >> ${repo_config}
         echo "repo.index.solr.solrUrl=${solr_baseurl}" >> ${repo_config}
         echo "repo.index.solr.solrCollection=${solr_collection}" >> ${repo_config}
+      elif [ -n "${enable_pgsql}" ]; then
+        # Enable PostgreSQL index; see config/postgresql.xml for further configuration
+        echo "repo.index.spec=pgsql" >> ${repo_config}
+      elif [ -n "${enable_derby}" ]; then
+        # Enable Derby index; see config/derby.xml for further configuration
+        echo "repo.index.spec=derby" >> ${repo_config}
       elif [ -n "${solr_baseurl}" ]; then
         # Yes: Use external Solr
         echo "repo.index.spec=solr" >> ${repo_config}
@@ -431,9 +439,11 @@ while true ; do
       identity_props="$2"
       shift; shift; continue ;;
     -pg | -postgres )
+      enable_pgsql=true
       db_props=config/postgres.xml
       shift; continue ;;
     -derby )
+      enable_derby=true
       db_props=config/derby.xml
       shift; continue ;;
     -java )
