@@ -175,7 +175,7 @@ copy_jar() {
       return
       ;;
     solr:* )
-      if is_enable_solr; then
+      if is_start_solr; then
         local version=${2#solr:}
         local output="${libdir}/solr-${version}.tar.gz"
         if [ ! -f "${output}" ]; then
