@@ -101,7 +101,7 @@ svc_list=()			# ordered array of svc_name
 cp_jars=lib			# jars to put on classpath.  "lib" is
 				# required for uber jar
 pln_props="config/lockss.xml"
-cluster_props="config/cluster.xml config/cluster.opt"
+cluster_props="config/cluster.xml config/cluster.opt config/cluster.xml.opt"
 identity_props="config/identity-standalone.xml"
 bootstrap_props="resource:application.properties config/bootstrap.xml config/bootstrap.opt"
 
