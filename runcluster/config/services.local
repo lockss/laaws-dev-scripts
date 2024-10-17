@@ -13,3 +13,4 @@ crawler=../../laaws-crawler-service/target/current-with-deps.jar
 #mdq=../../laaws-metadataservice/target/current-with-deps.jar
 #soap=../../laaws-soap-service/target/current-with-deps.jar
 solr=solr:8.11.2
+pgsql=postgres:14

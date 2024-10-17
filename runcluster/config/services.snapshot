@@ -13,3 +13,4 @@ crawler=mvn:org.lockss.laaws:laaws-crawler-service:1.1.0-SNAPSHOT
 #mdq=mvn:org.lockss.laaws:laaws-metadata-service:2.7.0-SNAPSHOT
 #soap=mvn:org.lockss.laaws:laaws-soap-service:1.5.0-SNAPSHOT
 solr=solr:8.11.2
+pgsql=postgres:14
