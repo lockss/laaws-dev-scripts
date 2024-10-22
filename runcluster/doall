@@ -514,6 +514,15 @@ while true ; do
       identity_props="$2"
       shift; shift; continue ;;
     -pg | -postgres )
+      if [ ! $(command -v docker) ] >/dev/null; then
+	echo "-pg option requires the docker runtime to be installed"
+	echo "  and the current user to be a member of the docker group"
+	exit 1;
+      fi
+      if [ ! $(command -v jq) ] >/dev/null; then
+	echo "-pg option requires jq to be installed"
+	exit 1;
+      fi
       enable_pgsql=true
       db_props=config/postgres.xml
       shift; continue ;;
