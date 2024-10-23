@@ -98,7 +98,8 @@
         <value>mdx=:24640:24641</value>
         <value>mdq=:24650:24651</value>
         <value>crawler=:24660:24661</value>
-        <value>soap=:24675</value>
+        <!-- SOAP has neither REST nor UI port, shouldn't have a service binding -->
+<!--         <value>soap=:24675</value> -->
       </list>
     </property>
 

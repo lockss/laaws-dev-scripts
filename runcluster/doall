@@ -15,6 +15,8 @@ usage() {
   echo "               which runs SNAPSHOT artifacts downloaded from maven central)"
   echo "  -local       Synonym for -svcs config/services.local (which runs"
   echo "               locally built service jars)"
+  echo "  -release     Synonym for -svcs config/services.release (which runs"
+  echo "               the most recent release service jars)"
   echo "  -pg          Use external PostgreSQL database"
   echo "  -derby       Use embedded Derby database (default)"
   echo "  -volatile    Use use a volatile artifact index"
@@ -42,6 +44,7 @@ usage() {
   echo "  -java <path> Specify path to Java executable"
   echo "  -8           Use Java at JAVA_8_HOME/bin"
   echo "  -11          Use Java at JAVA_11_HOME/bin"
+  echo "  -17          Use Java at JAVA_17_HOME/bin"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
   echo "  -U           Force maven to check for updated artifacts"
@@ -75,6 +78,7 @@ l4j_xml=config/log4j2-runcluster.xml
 # defaults
 svcs_file="./config/services.snapshot"
 svcs_file_local="./config/services.local"
+svcs_file_release="./config/services.release"
 forcekill=
 testing=
 repo_dirs=default
@@ -99,7 +103,7 @@ svc_list=()			# ordered array of svc_name
 cp_jars=lib			# jars to put on classpath.  "lib" is
 				# required for uber jar
 pln_props="config/lockss.xml"
-cluster_props="config/cluster.xml config/cluster.opt"
+cluster_props="config/cluster.xml config/cluster.opt config/cluster.xml.opt"
 identity_props="config/identity-standalone.xml"
 bootstrap_props="resource:application.properties config/bootstrap.xml config/bootstrap.opt"
 
@@ -504,6 +508,9 @@ while true ; do
     "-local" )
       svcs_file="${svcs_file_local}"
       shift; continue ;;
+    "-release" )
+      svcs_file="${svcs_file_release}"
+      shift; continue ;;
     "-p" )
       pln_props="$2"
       shift; shift; continue ;;
@@ -554,6 +561,19 @@ while true ; do
       PATH="$JAVA_HOME/bin:$PATH"
       export PATH
       echo JAVA_HOME="$JAVA_HOME"
+      shift; continue;;
+    "-17" )
+      if [ -z "$JAVA_17_HOME" ] ; then
+	echo "-17 option requires JAVA_17_HOME to point to Java 17 install dir"
+	exit 1;
+      fi
+      JAVA_HOME="${JAVA_17_HOME}"
+      export JAVA_HOME
+      PATH="$JAVA_HOME/bin:$PATH"
+      export PATH
+      echo JAVA_HOME="$JAVA_HOME"
+      # Java 17 needs --add-opens for reflection
+      java_args="${java_args} --add-opens java.base/java.util=ALL-UNNAMED"
       shift; continue;;
     -volatile )
       volatile_index=1
@@ -608,7 +628,7 @@ while true ; do
     -a )
       other_args="$other_args $2"
       shift; shift; continue ;;
-    -a | -g | -s | -x )
+    -g | -s | -x )
       other_args="$other_args $1 $2"
       shift; shift; continue ;;
     -c )
