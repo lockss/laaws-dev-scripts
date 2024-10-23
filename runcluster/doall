@@ -250,6 +250,7 @@ copy_jar() {
 }
 
 get_container_id() {
+  container_name=$1
   docker ps -a --format json | jq "select(.Names == \"${container_name}\") | .ID"
 }
 
