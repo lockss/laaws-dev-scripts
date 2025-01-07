@@ -48,8 +48,9 @@
     </if>
 
     <if>
-      <test serviceAbbrev="mdx"/>
+      <test serviceAbbrev="md"/>
       <then>
+    <property name="metadataDbManager.waitForExternalSetup" value="true"/>
 	<property name="metadataDbManager.datasource">
 	  <property name="className"
 		    value="org.postgresql.ds.PGSimpleDataSource"/>
@@ -61,33 +62,6 @@
 <!-- 	  <property name="portNumber" value="5432"/> -->
 	</property>
 
-	<property name="jobDbManager.datasource">
-	  <property name="className"
-		    value="org.postgresql.ds.PGSimpleDataSource"/>
-	  <property name="password" value="goodPassword"/>
-	  <property name="schemaName" value="LOCKSS"/>
-	  <property name="dbcp.enabled" value="true"/>
-<!-- 	  <property name="user" value="postgres"/> -->
-<!--      <property name="serverName" value="localhost"/> -->
-<!-- 	  <property name="portNumber" value="5432"/> -->
-	</property>
-      </then>
-    </if>
-
-    <if>
-      <test serviceAbbrev="mdq"/>
-      <then>
-	<property name="metadataDbManager.waitForExternalSetup" value="true"/>
-	<property name="metadataDbManager.datasource">
-	  <property name="className"
-		    value="org.postgresql.ds.PGSimpleDataSource"/>
-	  <property name="password" value="goodPassword"/>
-	  <property name="schemaName" value="LOCKSS"/>
-	  <property name="dbcp.enabled" value="true"/>
-<!-- 	  <property name="user" value="postgres"/> -->
-<!--      <property name="serverName" value="localhost"/> -->
-<!-- 	  <property name="portNumber" value="5432"/> -->
-	</property>
 	<property name="jobDbManager.waitForExternalSetup" value="true"/>
 	<property name="jobDbManager.datasource">
 	  <property name="className"

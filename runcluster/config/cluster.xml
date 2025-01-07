@@ -71,7 +71,7 @@
     </if>
 
     <if>
-      <test serviceAbbrev="mdx"/>
+      <test serviceAbbrev="md"/>
       <then>
 	<property name="jobManager.enabled" value="true"/>
 
@@ -95,8 +95,7 @@
         <value>repo=:24610</value>     <!--repo has no UI port-->
         <value>cfg=:24620:24621</value>
         <value>poller=:24630:24631</value>
-        <value>mdx=:24640:24641</value>
-        <value>mdq=:24650:24651</value>
+        <value>md=:24650:24651</value>
         <value>crawler=:24660:24661</value>
         <value>soap=:24675</value>
       </list>
