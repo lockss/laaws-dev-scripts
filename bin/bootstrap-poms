@@ -29,7 +29,7 @@ usage() {
 }
 
 # Need to invoke scripts in this script's dir
-export PATH="$(cd "$(dirname "$0")" && pwd) $PATH"
+export PATH="$(cd "$(dirname "$0")" && pwd):$PATH"
 
 method=${1:-mvn}
 variant=${2:-snapshot}
