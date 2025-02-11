@@ -47,6 +47,7 @@ usage() {
   echo "  -17          Use Java at JAVA_17_HOME/bin"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
+  echo "  -jars <dir>  Add *.jar from <dir> to the classpath"
   echo "  -U           Force maven to check for updated artifacts"
   echo "  -X           Turn on maven debugging"
   echo "  -mvnarg <mvn_arg> Pass a command-line arg to maven"
@@ -415,6 +416,13 @@ cleanup() {
   /bin/rm -f $temp_svcs_file
 }
 
+copy_one_jar() {
+  # copy jar to tmplib
+  tmptmpjar="${libdir}/`basename ${1}`"
+  cp -u "$1" "${tmptmpjar}"
+  cp_jars="${cp_jars},${tmptmpjar}"
+}
+
 ### Main ###
 
 while true ; do
@@ -501,10 +509,12 @@ while true ; do
       max_warc_size="$2"
       shift; shift; continue ;;
     -jar )
-      # copy jar to tmplib
-      tmptmpjar="${libdir}/`basename $2`"
-      cp -u "$2" "${tmptmpjar}"
-      cp_jars="${cp_jars},${tmptmpjar}"
+      copy_one_jar "${2}"
+      shift; shift; continue ;;
+    -jars )
+      for _j in "${2}"/*.jar ; do
+        copy_one_jar "${_j}"
+      done
       shift; shift; continue ;;
     -D )
       echo "Bare -D ignored.  Did you mean -Dprop=value?"
