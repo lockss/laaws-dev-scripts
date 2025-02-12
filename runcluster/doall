@@ -47,7 +47,9 @@ usage() {
   echo "  -17          Use Java at JAVA_17_HOME/bin"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
+  echo "  -pjar <file> Add plugin jar <file> to the classpath and plugin list"
   echo "  -jars <dir>  Add *.jar from <dir> to the classpath"
+  echo "  -pjars <dir> Add *.jar from <dir> to the classpath and plugin list"
   echo "  -U           Force maven to check for updated artifacts"
   echo "  -X           Turn on maven debugging"
   echo "  -mvnarg <mvn_arg> Pass a command-line arg to maven"
@@ -82,6 +84,7 @@ svcs_file_local="./config/services.local"
 svcs_file_release="./config/services.release"
 forcekill=
 testing=
+plugjars=
 repo_dirs=default
 repo_state_dir=default
 mvn_U=
@@ -508,12 +511,19 @@ while true ; do
     -maxwarc )
       max_warc_size="$2"
       shift; shift; continue ;;
-    -jar )
+    -jar | -pjar )
+      # copy jar to tmplib
       copy_one_jar "${2}"
+      if [[ "$1" = "-pjar" ]]; then
+        plugjars="${plugjars} $(basename $2)"
+      fi
       shift; shift; continue ;;
-    -jars )
-      for _j in "${2}"/*.jar ; do
+    -jars | -pjars )
+      for _j in "${2}/"*.jar ; do
         copy_one_jar "${_j}"
+        if [[ "$1" = "-pjars" ]]; then
+          plugjars="${plugjars} $(basename ${_j})"
+        fi
       done
       shift; shift; continue ;;
     -D )
@@ -565,6 +575,14 @@ while true ; do
   esac
   break;
 done
+
+# If any plugin jars were specified, add a props file that sets
+# org.lockss.plugin.registryJars to the list of jar names
+if [ -n "${plugjars}" ]; then
+  plugregfile="${libdir}/plugin_registry.txt"
+  echo "org.lockss.plugin.registryJars=${plugjars// /\;}" >${plugregfile}
+  cluster_props="${cluster_props} ${plugregfile}"
+fi
 
 # process service name args, if any
 svc_names=
