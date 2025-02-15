@@ -34,6 +34,7 @@ usage() {
   echo "  -c <file>    Load additional config from <file> (incl tdb .xml)"
   echo "  -x <dir>     Load config from dir/*.xml (typically used for tdb files)"
   echo "  -g <group>   Set polling group to <group>"
+  echo "  -clockss     Run in CLOCKSS mode"
   echo "  -repostate <dir>  Set the Repository Service state directory to <dir>"
   echo "  -repos <dir_list>  Semicolom-separated list of repository dirs.  the word"
   echo "               \"default\" in the list designates the default repo dir, which"
@@ -536,6 +537,12 @@ while true ; do
     -c )
       other_args="$other_args -l $2"
       shift; shift; continue ;;
+    -clockss )
+      # Not really necessary for this to be a bootstrap file, but it
+      # sets a platform parsm so it's more proper
+      bootstrap_props="${bootstrap_props} config/clockss"
+      echo "Running as a CLOCKSS node"
+      shift; continue ;;
     -repos )
       repo_dirs="$2"
       shift; shift; continue ;;
