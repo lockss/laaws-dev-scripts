@@ -46,15 +46,23 @@ usage() {
   echo "  -17          Use Java at JAVA_17_HOME/bin"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
-  echo "  -pjar <file> Add plugin jar <file> to the classpath and plugin list"
+  echo "  -pjar <file> Load plugins in jar <file>"
   echo "  -jars <dir>  Add *.jar from <dir> to the classpath"
-  echo "  -pjars <dir> Add *.jar from <dir> to the classpath and plugin list"
+  echo "  -pjars <dir> Load plugins from all plugin jars in <dir>"
   echo "  -U           Force maven to check for updated artifacts"
   echo "  -X           Turn on maven debugging"
   echo "  -mvnarg <mvn_arg> Pass a command-line arg to maven"
   echo "  -force       Use with \"stop\" to force hung JVMs to exit"
   echo "  -testing     Use testing components"
 }
+
+require_file() {
+  if [[ ! -f "${1}" ]]; then
+    echo "Error: "${1}" not found"
+    exit 1
+  fi
+}
+
 
 shopt -s nullglob
 
@@ -421,7 +429,7 @@ cleanup() {
 copy_one_jar() {
   # copy jar to tmplib
   tmptmpjar="${libdir}/`basename ${1}`"
-  cp -u "$1" "${tmptmpjar}"
+  cp -u "${1}" "${tmptmpjar}"
   cp_jars="${cp_jars},${tmptmpjar}"
 }
 
@@ -431,6 +439,7 @@ while true ; do
   case "$1" in
     "-svcs" )
       svcs_file="$2"
+      require_file "${svcs_file}"
       shift; shift; continue ;;
     "-local" )
       svcs_file="${svcs_file_local}"
@@ -443,9 +452,11 @@ while true ; do
       shift; shift; continue ;;
     -cluster )
       cluster_props="$2"
+      require_file "${cluster_props}"
       shift; shift; continue ;;
     -id )
       identity_props="$2"
+      require_file "${identity_props}"
       shift; shift; continue ;;
     -pg | -postgres )
       db_props=config/postgres.xml
@@ -490,6 +501,7 @@ while true ; do
       shift; shift; continue ;;
     -jar | -pjar )
       # copy jar to tmplib
+      require_file "${2}"
       copy_one_jar "${2}"
       if [[ "$1" = "-pjar" ]]; then
         plugjars="${plugjars} $(basename $2)"
@@ -535,13 +547,14 @@ while true ; do
       other_args="$other_args $1 $2"
       shift; shift; continue ;;
     -c )
+      require_file "$2"
       other_args="$other_args -l $2"
       shift; shift; continue ;;
     -clockss )
       # Not really necessary for this to be a bootstrap file, but it
       # sets a platform parsm so it's more proper
       bootstrap_props="${bootstrap_props} config/clockss"
-      echo "Running as a CLOCKSS node"
+      echo "Will run in CLOCKSS mode"
       shift; continue ;;
     -repos )
       repo_dirs="$2"
@@ -633,7 +646,7 @@ fi
 
 
 if [[ -n "${solr_baseurl}" && -z "${svc_map[solr]}" ]]; then
-  echo "Warning: -solr or -extsolr supplied but no solr service definition"
+  echo "Error: -solr or -extsolr supplied but no solr service definition"
   exit 1
 fi
 
