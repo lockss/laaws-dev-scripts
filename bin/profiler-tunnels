@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Open ssh tunnel to JProfiler ports on specified host
+
+host="${1}"
+ssh -L 0.0.0.0:7041:localhost:7041 -L 0.0.0.0:7042:localhost:7042 -L 0.0.0.0:7043:localhost:7043 -L 0.0.0.0:7045:localhost:7045 -L 0.0.0.0:7046:localhost:7046 user@${host}

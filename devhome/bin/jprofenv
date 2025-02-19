@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Set up the environemt to cause the specified service to run the
+# JProfiler agent when it starts.  Alternatively, put these env vars
+# in ~lockss-installer/config/env.mustache.opt to make them persist
+# across logout
+
 usage() {
   echo "eval \$(jprofanv <service_name> <host-port> [<container-port>])"
   echo "  <service_name>     CFG, REPO, POL, MDX, MDQ, SOAP, CRAWL"
@@ -8,7 +13,8 @@ usage() {
   exit 2
 }
 
-SVC="$1"
+SVC="${1^^}"
+
 AGENT=/data/jprofiler13/bin/linux-x64/libjprofilerti.so
 HPORT="${2}"
 CPORT="${3:-8849}"
