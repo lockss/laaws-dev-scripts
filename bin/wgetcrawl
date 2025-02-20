@@ -11,7 +11,7 @@ script_name=$(basename "${BASH_SOURCE[0]}")
 
 # ---- constants
 cfg_port=24620
-crawl_port=24660
+crawl_port=24640
 
 # ---- defaults
 host=localhost
