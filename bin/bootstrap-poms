@@ -88,11 +88,20 @@ build_one_art() {
 }
 
 # fetch_one <groupid>:<artifactid>
-fetch_one_art() {
+fetch_one_jar() {
   local art=`artifact-version -f ${ver_file} ${1}`
   mvn -B dependency:get \
     -DremoteRepositories=${mvn_repo} \
     -Dartifact=${art} \
+    -Dtransitive=false
+}
+
+# fetch_one <groupid>:<artifactid>
+fetch_one_pom() {
+  local art=`artifact-version -f ${ver_file} ${1}`
+  mvn -B dependency:get \
+    -DremoteRepositories=${mvn_repo} \
+    -Dartifact=${art}:pom \
     -Dtransitive=false
 }
 
@@ -104,9 +113,9 @@ case "${method}" in
     ;;
   mvn )
     set_up_variant ${variant}
-    fetch_one_art org.lockss:lockss-parent-pom
-    fetch_one_art org.lockss:lockss-plugins-parent-pom
-    fetch_one_art org.lockss:lockss-plugins-archetype
+    fetch_one_pom org.lockss:lockss-parent-pom
+    fetch_one_pom org.lockss:lockss-plugins-parent-pom
+    fetch_one_jar org.lockss:lockss-plugins-archetype
     ;;
   * )
     echo "Unknown method: ${method}"
