@@ -429,7 +429,7 @@ cleanup() {
 copy_one_jar() {
   # copy jar to tmplib
   tmptmpjar="${libdir}/`basename ${1}`"
-  cp -u "${1}" "${tmptmpjar}"
+  cp_dash_u "${1}" "${tmptmpjar}"
   cp_jars="${cp_jars},${tmptmpjar}"
 }
 
@@ -562,7 +562,7 @@ while true ; do
     -repostate )
       repo_state_dir="$2"
       shift; shift; continue ;;
-    -h )
+    -h | --help )
       usage
       exit 0 ;;
     -* )
