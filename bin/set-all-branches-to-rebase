@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# When run in the top dir of a git project, sets all local branches to
+# rebase = true.  Appropriate to run after adding
+# [branch]
+#      autosetuprebase = always
+# to one's ~/.gitconfig
+
+for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
+  git config set branch.$branch.rebase true
+done
