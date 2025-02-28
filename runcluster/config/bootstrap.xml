@@ -44,18 +44,10 @@
     </if>
 
     <if>
-      <test serviceAbbrev="mdx"/>
+      <test serviceAbbrev="md"/>
       <then>
-	<property name="diskSpacePaths" value="./data/mdx-files"/>
-	<property name="tmpDir" value="data/mdx-tmp"/>
-      </then>
-    </if>
-
-    <if>
-      <test serviceAbbrev="mdq"/>
-      <then>
-	<property name="diskSpacePaths" value="./data/mdq-files"/>
-	<property name="tmpDir" value="data/mdq-tmp"/>
+	<property name="diskSpacePaths" value="./data/md-files"/>
+	<property name="tmpDir" value="data/md-tmp"/>
       </then>
     </if>
 

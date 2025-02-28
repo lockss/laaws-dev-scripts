@@ -57,7 +57,7 @@
     </if>
 
     <if>
-      <test serviceAbbrev="mdx"/>
+      <test serviceAbbrev="md"/>
       <then>
 	<property name="metadataDbManager.datasource">
 	  <property name="className"
@@ -67,20 +67,6 @@
 	  <property name="dbcp.enabled" value="true"/>
 	</property>
 	<property name="jobDbManager.datasource">
-	  <property name="className"
-                    value="org.apache.derby.jdbc.ClientDataSource"/>
-	  <property name="portNumber" value="24607"/>
-	  <property name="password" value="goodPassword"/>
-	  <property name="dbcp.enabled" value="true"/>
-	</property>
-      </then>
-    </if>
-
-    <if>
-      <test serviceAbbrev="mdq"/>
-      <then>
-	<property name="metadataDbManager.waitForExternalSetup" value="true"/>
-	<property name="metadataDbManager.datasource">
 	  <property name="className"
                     value="org.apache.derby.jdbc.ClientDataSource"/>
 	  <property name="portNumber" value="24607"/>

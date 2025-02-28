@@ -34,6 +34,7 @@ usage() {
   echo "  -c <file>    Load additional config from <file> (incl tdb .xml)"
   echo "  -x <dir>     Load config from dir/*.xml (typically used for tdb files)"
   echo "  -g <group>   Set polling group to <group>"
+  echo "  -clockss     Run in CLOCKSS mode"
   echo "  -repostate <dir>  Set the Repository Service state directory to <dir>"
   echo "  -repos <dir_list>  Semicolom-separated list of repository dirs.  the word"
   echo "               \"default\" in the list designates the default repo dir, which"
@@ -42,17 +43,26 @@ usage() {
   echo "  -a <app_arg> Add <app_arg> to command line"
   echo "  -s name:<credentials_file> Load Rest client credentials from file"
   echo "  -java <path> Specify path to Java executable"
-  echo "  -8           Use Java at JAVA_8_HOME/bin"
-  echo "  -11          Use Java at JAVA_11_HOME/bin"
   echo "  -17          Use Java at JAVA_17_HOME/bin"
   echo "  -Dprop=val   Set System property"
   echo "  -jar <file>  Add jar <file> to the classpath"
+  echo "  -pjar <file> Load plugins in jar <file>"
+  echo "  -jars <dir>  Add *.jar from <dir> to the classpath"
+  echo "  -pjars <dir> Load plugins from all plugin jars in <dir>"
   echo "  -U           Force maven to check for updated artifacts"
   echo "  -X           Turn on maven debugging"
   echo "  -mvnarg <mvn_arg> Pass a command-line arg to maven"
   echo "  -force       Use with \"stop\" to force hung JVMs to exit"
   echo "  -testing     Use testing components"
 }
+
+require_file() {
+  if [[ ! -f "${1}" ]]; then
+    echo "Error: "${1}" not found"
+    exit 1
+  fi
+}
+
 
 shopt -s nullglob
 
@@ -81,6 +91,7 @@ svcs_file_local="./config/services.local"
 svcs_file_release="./config/services.release"
 forcekill=
 testing=
+plugjars=
 repo_dirs=default
 repo_state_dir=default
 mvn_U=
@@ -499,12 +510,20 @@ cleanup() {
   /bin/rm -f $temp_svcs_file
 }
 
+copy_one_jar() {
+  # copy jar to tmplib
+  tmptmpjar="${libdir}/`basename ${1}`"
+  cp_dash_u "${1}" "${tmptmpjar}"
+  cp_jars="${cp_jars},${tmptmpjar}"
+}
+
 ### Main ###
 
 while true ; do
   case "$1" in
     "-svcs" )
       svcs_file="$2"
+      require_file "${svcs_file}"
       shift; shift; continue ;;
     "-local" )
       svcs_file="${svcs_file_local}"
@@ -517,9 +536,11 @@ while true ; do
       shift; shift; continue ;;
     -cluster )
       cluster_props="$2"
+      require_file "${cluster_props}"
       shift; shift; continue ;;
     -id )
       identity_props="$2"
+      require_file "${identity_props}"
       shift; shift; continue ;;
     -pg | -postgres )
       if [ ! $(command -v docker) ] >/dev/null; then
@@ -541,28 +562,6 @@ while true ; do
     -java )
       java_bin="$2"
       shift; shift; continue ;;
-    "-8" )
-      if [ -z "$JAVA_8_HOME" ] ; then
-	echo "-8 option requires JAVA_8_HOME to point to Java 8 install dir"
-	exit 1;
-      fi
-      JAVA_HOME="${JAVA_8_HOME}"
-      export JAVA_HOME
-      PATH="$JAVA_HOME/bin:$PATH"
-      export PATH
-      echo JAVA_HOME="$JAVA_HOME"
-      shift; continue;;
-    "-11" )
-      if [ -z "$JAVA_11_HOME" ] ; then
-	echo "-11 option requires JAVA_11_HOME to point to Java 11 install dir"
-	exit 1;
-      fi
-      JAVA_HOME="${JAVA_11_HOME}"
-      export JAVA_HOME
-      PATH="$JAVA_HOME/bin:$PATH"
-      export PATH
-      echo JAVA_HOME="$JAVA_HOME"
-      shift; continue;;
     "-17" )
       if [ -z "$JAVA_17_HOME" ] ; then
 	echo "-17 option requires JAVA_17_HOME to point to Java 17 install dir"
@@ -595,11 +594,21 @@ while true ; do
     -maxwarc )
       max_warc_size="$2"
       shift; shift; continue ;;
-    -jar )
+    -jar | -pjar )
       # copy jar to tmplib
-      tmptmpjar="${libdir}/`basename $2`"
-      cp -u "$2" "${tmptmpjar}"
-      cp_jars="${cp_jars},${tmptmpjar}"
+      require_file "${2}"
+      copy_one_jar "${2}"
+      if [[ "$1" = "-pjar" ]]; then
+        plugjars="${plugjars} $(basename $2)"
+      fi
+      shift; shift; continue ;;
+    -jars | -pjars )
+      for _j in "${2}/"*.jar ; do
+        copy_one_jar "${_j}"
+        if [[ "$1" = "-pjars" ]]; then
+          plugjars="${plugjars} $(basename ${_j})"
+        fi
+      done
       shift; shift; continue ;;
     -D )
       echo "Bare -D ignored.  Did you mean -Dprop=value?"
@@ -633,15 +642,22 @@ while true ; do
       other_args="$other_args $1 $2"
       shift; shift; continue ;;
     -c )
+      require_file "$2"
       other_args="$other_args -l $2"
       shift; shift; continue ;;
+    -clockss )
+      # Not really necessary for this to be a bootstrap file, but it
+      # sets a platform parsm so it's more proper
+      bootstrap_props="${bootstrap_props} config/clockss"
+      echo "Will run in CLOCKSS mode"
+      shift; continue ;;
     -repos )
       repo_dirs="$2"
       shift; shift; continue ;;
     -repostate )
       repo_state_dir="$2"
       shift; shift; continue ;;
-    -h )
+    -h | --help )
       usage
       exit 0 ;;
     -* )
@@ -650,6 +666,14 @@ while true ; do
   esac
   break;
 done
+
+# If any plugin jars were specified, add a props file that sets
+# org.lockss.plugin.registryJars to the list of jar names
+if [ -n "${plugjars}" ]; then
+  plugregfile="${libdir}/plugin_registry.txt"
+  echo "org.lockss.plugin.registryJars=${plugjars// /\;}" >${plugregfile}
+  cluster_props="${cluster_props} ${plugregfile}"
+fi
 
 # process service name args, if any
 svc_names=
@@ -717,7 +741,7 @@ fi
 
 
 if [[ -n "${solr_baseurl}" && -z "${svc_map[solr]}" ]]; then
-  echo "Warning: -solr or -extsolr supplied but no solr service definition"
+  echo "Error: -solr or -extsolr supplied but no solr service definition"
   exit 1
 fi
 
