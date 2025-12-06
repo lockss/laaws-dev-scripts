@@ -351,7 +351,7 @@ start_service() {
       else
 	echo "repo.datastore.spec=local" >> ${repo_config}
       fi
-      echo "repo.datastore.local.basedir=${repo_abs_dirs}" >> ${repo_config}
+      echo "repo.datastore.local.basedirs=${repo_abs_dirs}" >> ${repo_config}
 
       if [ -n "${enable_solr}" ]; then
         # Use Solr artifact index
