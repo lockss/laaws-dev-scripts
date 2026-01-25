@@ -91,8 +91,9 @@ if [ "${PCT_SWAP_USED}" -gt "${PCT_SWAP_USED_THRESHOLD}" ]; then
     exit 1
 fi
 
+echo "Starting build at `date` >> ${LOGFILE}
 # Check out tree
-( cd ${TMPROOT}; git clone --depth=1 --branch master https://github.com/lockss/lockss-daemon.git ) > ${LOGFILE} 2>&1
+( cd ${TMPROOT}; git clone --depth=1 --branch master https://github.com/lockss/lockss-daemon.git ) >> ${LOGFILE} 2>&1
 if [ $? -ne 0 ]; then
     ( echo "`date`: LOCKSS daemon nightly build failure on `hostname` in ${TMPROOT}"
       echo "Build failed: Could not clone LOCKSS daemon Git repository"
@@ -103,7 +104,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Build and test-all
-( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-all -Djava.io.tmpdir=${JAVATMP} ) > ${LOGFILE} 2>&1
+( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-all -Djava.io.tmpdir=${JAVATMP} ) >> ${LOGFILE} 2>&1
 
 # Notify Tortoise of any failures from running test-all
 if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
@@ -140,7 +141,7 @@ if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 else
 
 	# No "BUILD FAILED" in log: Run test-stf
-	( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-stf -Dsuite=postTagTests -Djava.io.tmpdir=${JAVATMP} ) > ${LOGFILE} 2>&1
+	( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-stf -Dsuite=postTagTests -Djava.io.tmpdir=${JAVATMP} ) >> ${LOGFILE} 2>&1
 
 	if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 
@@ -161,7 +162,7 @@ else
 		RELEASE_NUM=`grep -P '^\d+\.\d+\.\d+$' ${TMPROOT}/lockss-daemon/src/defaultreleasename`
 		( cd ${TMPROOT}/lockss-daemon && ${ANT} clean rpm -Drpmrelease=1 -Dreleasename=${RELEASE_NUM} &&
 		  mkdir -p ${RPMS} && cp ${TMPROOT}/lockss-daemon/rpms/RPMS/noarch/*.rpm ${RPMS}
-		) >${LOGFILE} 2>&1
+		) >> ${LOGFILE} 2>&1
 		if [ $? -ne 0 ]; then
 		    ( echo "`date`: LOCKSS daemon build failure on `hostname` in ${TMPROOT}"
 		      echo "RPM build failed:"
