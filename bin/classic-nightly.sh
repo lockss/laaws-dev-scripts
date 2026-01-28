@@ -91,7 +91,7 @@ if [ "${PCT_SWAP_USED}" -gt "${PCT_SWAP_USED_THRESHOLD}" ]; then
     exit 1
 fi
 
-echo "Starting build at `date` >> ${LOGFILE}
+echo "Starting build at `date`" >> ${LOGFILE}
 # Check out tree
 ( cd ${TMPROOT}; git clone --depth=1 --branch master https://github.com/lockss/lockss-daemon.git ) >> ${LOGFILE} 2>&1
 if [ $? -ne 0 ]; then
