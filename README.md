@@ -45,7 +45,7 @@ This project's development branch is the `develop` branch:
       -p <url>     Load config from prop server <url>
       -p <name>    Load config from http://props.lockss.org:8001/<name>/lockss.xml
       -c <url>     Load config from ConfigSvc at <url>
-      -c <host>    Load config from ConfigSvc at <host>:24620
+      -c <host>    Load config from ConfigSvc at <host>:24612
       -c <host:port> Load config from ConfigSvc at <host>:<port>
       -g <group>    Set polling group to <group>
       -Dprop=val    Set System property

@@ -10,8 +10,8 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 script_name=$(basename "${BASH_SOURCE[0]}")
 
 # ---- constants
-cfg_port=24620
-crawl_port=24640
+cfg_port=24612
+crawl_port=24614
 
 # ---- defaults
 host=localhost
