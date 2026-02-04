@@ -93,7 +93,7 @@ fi
 
 echo "Starting build at `date`" >> ${LOGFILE}
 # Check out tree
-( cd ${TMPROOT}; git clone --depth=1 --branch master https://github.com/lockss/lockss-daemon.git ) >> ${LOGFILE} 2>&1
+( cd ${TMPROOT}; git clone -q --depth=1 --branch master https://github.com/lockss/lockss-daemon.git ) >> ${LOGFILE} 2>&1
 if [ $? -ne 0 ]; then
     ( echo "`date`: LOCKSS daemon nightly build failure on `hostname` in ${TMPROOT}"
       echo "Build failed: Could not clone LOCKSS daemon Git repository"
