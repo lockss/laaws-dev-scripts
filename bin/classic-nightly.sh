@@ -104,12 +104,13 @@ if [ $? -ne 0 ]; then
 fi
 
 # Build and test-all
-( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-all -Djava.io.tmpdir=${JAVATMP} ) >> ${LOGFILE} 2>&1
+build_fail=""
+( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-all -Djava.io.tmpdir=${JAVATMP} ) >> ${LOGFILE} 2>&1 || build_fail=1
 
 # Notify Tortoise of any failures from running test-all
-if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
+if [ -n "${build_fail}" ] || grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 
-	# Yes "BUILD FAILED" in log: Test whether there are any unit test result logs
+	# Test whether there are any unit test result logs
 	if [ -n "$(find {$TMPROOT}/lockss-daemon/test/results -maxdepth 1 -type f -iname '*.txt' 2> /dev/null)" ]; then
 
 		# YES: Determine which unit test failed and attach its log to the email
@@ -141,9 +142,10 @@ if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 else
 
 	# No "BUILD FAILED" in log: Run test-stf
-	( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-stf -Dsuite=postTagTests -Djava.io.tmpdir=${JAVATMP} ) >> ${LOGFILE} 2>&1
+	stf_fail=""
+	( cd ${TMPROOT}/lockss-daemon; env; ${ANT} test-stf -Dsuite=postTagTests -Djava.io.tmpdir=${JAVATMP} ) >> ${LOGFILE} 2>&1 || stf_fail=1
 
-	if grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
+	if [ -n "${stf_fail}" ] || grep -q -E '^BUILD FAILED$' ${LOGFILE}; then
 
 		# YES: test-stf did not pass; send an email notification
 		( echo "`date`: The LOCKSS nightly build failed while running test-stf on `hostname` in ${TMPROOT}:";
