@@ -15,7 +15,7 @@ usage() {
   echo "  -pid <file>  If background, write pid to this file"
   echo "  -Dprop=val   Set System property"
   echo "  -c <url>     Load config from ConfigSvc at <url>"
-  echo "  -c <host>    Load config from ConfigSvc at <host>:24620"
+  echo "  -c <host>    Load config from ConfigSvc at <host>:24612"
   echo "  -c <host:port> Load config from ConfigSvc at <host>:<port>"
   echo "  -dir <dir>   Run in <dir>"
   echo "  -g <group>   Set polling group to <group>"
@@ -221,7 +221,7 @@ if [ -n "$config" ]; then
 	*:* )
 	  cfg_host="$config" ;;
 	* )
-	  cfg_host="$config:24620" ;;
+	  cfg_host="$config:24612" ;;
       esac
       cfg_stem="http://$cfg_host" ;;
   esac
