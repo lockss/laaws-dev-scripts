@@ -197,7 +197,7 @@ copy_jar() {
       echo "No service definition found for $1" >&2
       return
       ;;
-    postgres:* )
+    postgres:* | */postgres:* )
       # Pull Docker container image explicitly
       local container_image=$(docker pull -q "$2")
       ;;
