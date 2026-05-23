@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# List all port forwards for pods in the lockss namespace
+
+kubectl -n lockss get svc -o json | jq '.items[] | {name:.metadata.name, p:.spec.ports[] } | select( .p.nodePort != null ) | "\(.name): localhost:\(.p.nodePort) -> \(.p.port) -> \(.p.targetPort)"'
