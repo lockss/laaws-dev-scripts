@@ -35,3 +35,8 @@ runcluster/config/bootstrap.opt
 runcluster/config/cluster.opt
 runcluster/derby.log
 /openapigen/out/
+
+# classic-build
+/classic-build/lockss-daemon/
+/classic-build/rpms/
+/classic-build/.rpm/
