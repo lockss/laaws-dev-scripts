@@ -11,6 +11,5 @@ poller=mvn:org.lockss.laaws:laaws-poller:${artver:org.lockss.laaws:laaws-poller}
 crawler=mvn:org.lockss.laaws:laaws-crawler-service:${artver:org.lockss.laaws:laaws-crawler-service}
 md=mvn:org.lockss.laaws:laaws-metadata-service:${artver:org.lockss.laaws:laaws-metadata-service}
 #soap=mvn:org.lockss.laaws:laaws-soap-service:${artver:org.lockss.laaws:laaws-soap-service}
-solr=solr:8.11.2
 pgsql=postgres:14
 #pgsql=arm64v8/postgres:14

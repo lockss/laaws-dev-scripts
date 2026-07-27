@@ -11,6 +11,5 @@ poller=mvn:org.lockss.laaws:laaws-poller:2.8.0
 crawler=mvn:org.lockss.laaws:laaws-crawler-service:1.2.0
 md=mvn:org.lockss.laaws:laaws-metadata-service:2.8.0
 #soap=mvn:org.lockss.laaws:laaws-soap-service:1.6.0
-solr=solr:8.11.2
 pgsql=postgres:14
 #pgsql=arm64v8/postgres:14
